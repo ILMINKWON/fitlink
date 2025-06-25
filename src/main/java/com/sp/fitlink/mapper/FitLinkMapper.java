@@ -1,10 +1,14 @@
 package com.sp.fitlink.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import com.sp.fitlink.dto.AdminDto;
 import com.sp.fitlink.dto.ManagerDto;
 import com.sp.fitlink.dto.NotificationDto;
+
+import java.util.List;
+import java.util.Map; 
 
 @Mapper
 public interface FitLinkMapper {
@@ -23,6 +27,8 @@ public interface FitLinkMapper {
     public int insertNotification(NotificationDto notificationDto);
 
     public ManagerDto findManagerById(int id);
+
+    public List<AdminDto> findByNameContaining(@Param("keyword") String keyword);
 
 
 }

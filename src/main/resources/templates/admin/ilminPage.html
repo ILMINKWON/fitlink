@@ -121,5 +121,52 @@
     });
   });
   </script>
+  <script>
+    const nameInput = document.getElementById("adminName");
+    const phoneInput = document.getElementById("adminPhone");
+    const codeInput = document.getElementById("adminCode");
+    const suggestionList = document.getElementById("suggestionList");
+
+    function generateRandomCode(length = 6) {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let code = '';
+      for (let i = 0; i < length; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return code;
+    }
+
+    nameInput.addEventListener("input", async () => {
+      const keyword = nameInput.value.trim();
+      if (keyword.length < 1) {
+        suggestionList.innerHTML = "";
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/leaders/search?keyword=${encodeURIComponent(keyword)}`);
+        const results = await response.json();
+
+        suggestionList.innerHTML = "";
+        results.forEach(item => {
+          const li = document.createElement("li");
+          li.className = "list-group-item list-group-item-action";
+          li.textContent = `${item.name} (${item.phone})`;
+
+          li.addEventListener("click", () => {
+            nameInput.value = item.name;
+            phoneInput.value = item.phone;
+            codeInput.value = generateRandomCode(); // ← 코드 자동 생성
+            suggestionList.innerHTML = "";
+          });
+
+          suggestionList.appendChild(li);
+        });
+      } catch (error) {
+        console.error("자동완성 오류:", error);
+      }
+    });
+  </script>
+
 </body>
 </html>

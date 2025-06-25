@@ -9,6 +9,12 @@ import com.sp.fitlink.dto.ManagerDto;
 import com.sp.fitlink.dto.NotificationDto;
 import com.sp.fitlink.mapper.FitLinkMapper;
 
+import java.util.List;
+import java.util.Map; 
+
+import java.util.stream.Collectors;
+
+
 @Service
 public class FitLinkService {
 
@@ -58,6 +64,15 @@ public class FitLinkService {
         return fitLinkMapper.countByPhone(phone) > 0;
     }
 
+
+     //-------------------------------------------------------------------------------------
+
+     public List<Map<String, String>> searchByName(String keyword) {
+        List<AdminDto> matched = fitLinkMapper.findByNameContaining(keyword);
+        return matched.stream()
+            .map(l -> Map.of("name", l.getName(), "phone", l.getPhone()))
+            .collect(Collectors.toList());
+    }
     
 
 

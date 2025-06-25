@@ -55,6 +55,12 @@
 <select id="findManagerById" resultType="com.sp.fitlink.dto.ManagerDto" parameterType="int">
     SELECT * FROM manager WHERE id = #{id}
 </select>
+
+<select id="findByNameContaining" resultType="com.sp.fitlink.dto.AdminDto">
+    SELECT name, phone
+    FROM admin
+    WHERE name LIKE CONCAT('%', #{keyword}, '%')
+  </select>
   
 
 </mapper>
