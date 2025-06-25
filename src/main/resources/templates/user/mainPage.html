@@ -40,23 +40,25 @@
           </style>
     </head>
     <body>
-        사이드 프로젝트 ( 마지막 ) 잘 꾸며보자.
-        <div class="container-fluid container-mv" style="margin-top: 150px;">
+        <div class="container-fluid container-mv" style="margin-top: 100px;">
             <div class="row">
                 <div class="col m-0 p-0">
                     <div class="fit-logo">Fit Link.</div>
                 </div>
             </div>
-            <div class="row justify-content-center mt-5 m-0">
-                <!-- 사용자 칸 -->
+            <!--로그아웃-->
+            <button class="btn btn-primary logout-btn" onclick="kakaoLogout()">로그아웃 임시테스트</button>
+            <div class="row justify-content-center mt-3 mb-5">
+               <!-- 사용자 칸 -->
                 <div class="col-6">
-                    <div class="btn btn-outline-primary w-100 py-5" id="userBtn">
+                    <div class="btn btn-outline-primary w-100 py-5" id="userBtn"
+                        data-bs-toggle="modal" data-bs-target="#userLoginModal">
                     <span id="userIcon" class="material-icons">person</span>
                     <span class="fs-3 fw-medium">사용자</span>
                     </div>
                 </div>
 
-                 <!-- 관리자 칸 -->
+                <!-- 관리자 칸 -->
                 <div class="col-6">
                     <div class="btn btn-outline-primary w-100 py-5" id="adminBtn"  data-bs-toggle="modal" data-bs-target="#adminAuthModal">
                     <span id="adminIcon" class="material-icons">shield</span>
@@ -69,21 +71,47 @@
                     <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content p-3">
                         <div class="modal-header border-0">
-                        <h5 class="modal-title fw-bold">보안 인증</h5>
+                        <h5 class="modal-title fw-bold">관리자 보안 인증</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body text-center">
-                        <p class="mb-3 fs-5 fw-medium">보안인증 코드를 입력해 주세요</p>
+                        <p class="mb-3 fs-6 fw-medium">보안인증 코드를 입력해 주세요</p>
                         <input type="text" id="authCode" class="form-control text-center mb-3" placeholder="인증번호 6자리" maxlength="6" />
-                        <button class="btn btn-primary w-100" onclick="adminCode()">확인</button>
+                        <button class="btn btn-primary w-100" onclick="adminCode()" id="authBtn">확인</button>
+                        <div class="row">
+                            <div class="col ms-1 mt-3">
+                                <span class="fw-bold mt-4" style="color: gray; font-size: 0.5rem;">* 관리자 등록을 원하시는 지도자분께서는 <a href="/fitLink/admin-register" class="fs-6" style="text-decoration: underline; color: gray;">
+                                    여기</a>를 클릭해주세요.
+                                </span>
+                            </div>
+                        </div>
                         </div>
                     </div>
                     </div>
                 </div>
+
+                <!-- 사용자 로그인 모달 -->
+                <div class="modal fade" id="userLoginModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg"> <!-- modal-lg로 크게 -->
+                    <div class="modal-content p-4">
+                        <div class="modal-header border-0 row">
+                            <!-- 카카오 로그인 버튼 -->
+                            <button class="btn w-100" style="background-color:#ffffff;" onclick="kakaoLogin()">
+                                <img src="https://developers.kakao.com/assets/img/about/logos/kakaologin/kr/kakao_account_login_btn_medium_narrow.png" 
+                                    alt="카카오 로그인" style="height: 40px;" />
+                            </button>
+                        </div>
+                        
+                        
+                    </div>
+                    </div>
+                </div>
             </div>
-        </div>
+            
+    </div>
         
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
     </body>
     <script>
         const userBtn = document.getElementById("userBtn");
@@ -122,7 +150,7 @@
         })
         .then(response => {
             if (!response.ok) {
-                throw new Error("서버 오류");
+                throw new Error("인증 코드 오류");
             }
             return response.text();
         })
@@ -138,5 +166,96 @@
             alert("인증 실패: " + error.message);
         });
     }
+    </script>
+    <script>
+        const authCodeInput = document.getElementById("authCode");
+        const authBtn = document.getElementById("authBtn");
+
+        authBtn.disabled = true;
+
+        authCodeInput.addEventListener("input", () => {
+            if (authCodeInput.value.length === 0) {
+                authBtn.disabled = true;
+            } else {
+                authBtn.disabled = false;
+            }
+                });
+    </script>
+    <script>
+        Kakao.init('5fc3ddce96acbc8d29ced7d741b2b26c'); // JavaScript 키로 초기화
+        console.log(Kakao.isInitialized()); // true 나오면 OK
+    </script>
+    <script>
+    function kakaoLogin() {
+        const token = Kakao.Auth.getAccessToken();
+
+        if (token) {
+            // 이미 로그인되어 있음
+            console.log("이미 로그인됨, 토큰:", token);
+
+            requestUserInfo(); // 사용자 정보 요청 함수 실행
+        } else {
+            // 로그인 시도
+            Kakao.Auth.login({
+                scope: 'profile_nickname',
+                success: function(authObj) {
+                    console.log("카카오 인증 성공:", authObj);
+                    requestUserInfo();
+                },
+                fail: function(err) {
+                    alert("카카오 로그인 실패: " + JSON.stringify(err));
+                }
+            });
+        }
+        }
+
+        // 사용자 정보 요청 후 서버로 전송
+        function requestUserInfo() {
+                Kakao.API.request({
+                    url: '/v2/user/me',
+                    success: function(res) {
+                        const kakaoId = res.id;
+                        const nickname = res.properties?.nickname || "알수없음";
+
+                        fetch('/fitLink/kakao-login', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ kakaoId: kakaoId, nickname: nickname })
+                        })
+                        .then(response => {
+                            if (!response.ok) throw new Error("로그인 실패");
+                            return response.text();
+                        })
+                        .then(result => {
+                            if (result === "success") {
+                                window.location.href = "/fitLink/mainPage";
+                            } else {
+                                alert("로그인 실패: 사용자 미등록");
+                            }
+                        })
+                        .catch(error => alert("서버 오류: " + error.message));
+                    },
+                    fail: function(error) {
+                        alert("사용자 정보 요청 실패: " + JSON.stringify(error));
+                    }
+                });
+                }
+
+    </script>
+    <script>
+        function kakaoLogout() {
+            if (Kakao.Auth.getAccessToken()) {
+                Kakao.Auth.logout(function() {
+                    alert("로그아웃 되었습니다.");
+                    // 원한다면 서버 세션도 정리하거나 홈으로 이동 가능
+                    window.location.href = "/fitLink/logout"; // 예: 로그아웃 처리 후 홈 이동
+                });
+            } else {
+                alert("이미 로그아웃된 상태입니다.");
+            }
+        }
+
     </script>
 </html>

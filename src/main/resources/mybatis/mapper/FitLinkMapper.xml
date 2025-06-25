@@ -7,4 +7,54 @@
     SELECT code FROM adminAuthCode LIMIT 1;
 </select>
 
+<!-- <select id="countByKakaoId" resultType="int" parameterType="long">
+    SELECT COUNT(*) FROM user WHERE kakao_id = #{kakaoId}
+</select> -->
+
+<select id="findAdminByKakaoId" resultType="com.sp.fitlink.dto.AdminDto">
+    SELECT * FROM admin_table WHERE kakao_id = #{kakaoId}
+</select>
+
+<insert id="adminRegisterComplete" parameterType="com.sp.fitlink.dto.AdminDto" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO admin (
+        id,
+        name,
+        gender,
+        birth,
+        email,
+        phone,
+        workplace,
+        certificate_path,
+        code
+        ) VALUES (
+        #{id},
+        #{name},
+        #{gender},
+        #{birth},
+        #{email},
+        #{phone},
+        #{workplace},
+        #{certificate_path},
+        #{code}
+    )
+</insert>
+
+<select id="countByPhone" resultType="int">
+    SELECT COUNT(*) FROM admin WHERE phone = #{phone}
+</select>
+
+
+<!--알림 INSERT-->
+ <insert id="insertNotification" parameterType="com.sp.fitlink.dto.NotificationDto" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO notification
+    (sender_id, recipient_id, message, is_read)
+    VALUES
+    (#{sender_id}, #{recipient_id}, #{message}, #{is_read})
+  </insert>
+
+<select id="findManagerById" resultType="com.sp.fitlink.dto.ManagerDto" parameterType="int">
+    SELECT * FROM manager WHERE id = #{id}
+</select>
+  
+
 </mapper>

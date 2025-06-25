@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <!--뷰 포트 설정-->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    </head>
+    <body>
+        <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm position-absolute top-0 start-0 m-3">
+            <i class="bi bi-arrow-left fs-6"></i>
+        </a>
+        <div class="container mt-3 mb-3" style="max-width: 600px;">
+            <h3 class="text-center mb-4">관리자 등록</h3>
+            <form action="/fitLink/adminRegisterComplete" method="post">
+                <!-- 코드번호 -->
+                <div class="mb-3 fw-bold">
+                    <label for="code" class="form-label">코드번호</label>
+                    <input type="text" class="form-control" id="code" name="code" disabled>
+                    <span style="font-size: 0.6rem;">* 코드번호는 절차기간 (3~7일) 소요 후 작성하신 전화번호로 발송예정입니다.</span>
+                </div>
+    
+                <!-- 이름 -->
+                <div class="mb-3 fw-bold">
+                    <label for="name" class="form-label">이름</label>
+                    <input type="text" class="form-control" id="name" name="name" required>
+                </div>
+    
+                <!-- 성별 -->
+                <div class="mb-3 fw-bold">
+                    <label class="form-label d-block">성별</label>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="gender" id="male" value="남" required>
+                        <label class="form-check-label" for="male">남</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="gender" id="female" value="여">
+                        <label class="form-check-label" for="female">여</label>
+                    </div>
+                </div>
+    
+                <!-- 생년월일 -->
+                <div class="mb-3 fw-bold">
+                    <label for="birth" class="form-label">생년월일</label>
+                    <input type="date" class="form-control" id="birth" name="birth" required>
+                </div>
+    
+                <!-- 이메일 입력 -->
+                <div class="mb-3 fw-bold">
+                    <label for="email" class="form-label">이메일</label>
+                    <input type="email" class="form-control" id="email" name="email" required placeholder="example@example.com">
+                    <div id="emailFeedback" class="form-text text-danger" style="display: none;">올바른 이메일 형식을 입력해주세요.</div>
+                </div>
+    
+                <!-- 전화번호 -->
+                <div class="mb-3 fw-bold">
+                    <label for="phone" class="form-label">전화번호</label>
+                    <input type="tel" class="form-control" id="phone" name="phone" required placeholder="010-1234-5678">
+                    <div id="phoneFeedback" class="form-text text-danger" style="display: none;">이미 등록된 번호입니다.</div>
+                </div>
+
+                <!-- 근무지 -->
+                <div class="mb-3 fw-bold">
+                  <label for="location" class="form-label">근무지역</label>
+                  <select class="form-select" id="location" name="workplace" required>
+                      <option selected disabled>선택하세요</option>
+                      <option value="서울">서울</option>
+                      <option value="경기">경기</option>
+                      <option value="인천">인천</option>
+                  </select>
+                </div>
+
+
+                <!-- 자격증명서 -->
+                <div class="mb-3 fw-bold">
+                    <label for="certificate_path" class="form-label">자격증명서 파일첨부</label>
+                    <input type="file" class="form-control" id="certificate" name="certificate_path" accept="image/*" required>
+                </div>
+                
+                <!-- 미리보기 이미지 표시 영역 -->
+                <div class="mb-3 fw-bold">
+                    <label class="form-label"></label><br>
+                    <img id="preview" src="#" alt="미리보기 이미지" style="display: none; max-width: 300px; border: 1px solid #ccc; padding: 5px; border-radius: 5px;" />
+                </div>
+    
+                <!-- 제출 버튼 -->
+                <button type="submit fw-bold" class="btn btn-primary w-100">회원가입</button>
+            </form>
+        </div>
+        <script>
+            const fileInput = document.getElementById('certificate');
+            const preview = document.getElementById('preview');
+          
+            fileInput.addEventListener('change', function () {
+              const file = this.files[0];
+          
+              if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+          
+                reader.onload = function (e) {
+                  preview.src = e.target.result;
+                  preview.style.display = 'block';
+                };
+          
+                reader.readAsDataURL(file);
+              } else {
+                preview.src = '#';
+                preview.style.display = 'none';
+                alert('이미지 파일만 업로드할 수 있습니다.');
+              }
+            });
+          </script>
+          <script>
+            const emailInput = document.getElementById('email');
+            const feedback = document.getElementById('emailFeedback');
+          
+            emailInput.addEventListener('input', function () {
+              const emailValue = this.value;
+              const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue);
+          
+              if (!isValid) {
+                feedback.style.display = 'block';
+              } else {
+                feedback.style.display = 'none';
+              }
+            });
+          </script>
+          <script>
+            const phoneInput = document.getElementById('phone');
+            const phoneFeedback = document.getElementById('phoneFeedback');
+
+            phoneInput.addEventListener('blur', function () {
+              const phone = phoneInput.value.trim();
+              const phonePattern = /^01[0-9]-\d{3,4}-\d{4}$/; // 010-0000-0000 형식
+
+              if (!phonePattern.test(phone)) {
+                phoneFeedback.textContent = '올바른 형식이 아닙니다.';
+                phoneFeedback.style.display = 'block';
+                phoneInput.value = '';
+                phoneInput.focus();
+                return;
+              }
+
+              // 형식이 맞을 때만 서버 요청
+              fetch('/fitLink/checkPhone', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({ phone: phone })
+              })
+              .then(response => response.json())
+              .then(data => {
+                if (data === true) {
+                  phoneFeedback.textContent = '이미 있는 휴대폰 번호입니다.';
+                  phoneFeedback.style.display = 'block';
+                  phoneFeedback.style.color = 'red';
+                  phoneFeedback.classList.remove('text-success'); // 있으면 제거
+                  phoneFeedback.classList.add('text-danger');     // 필요시 클래스 추가
+                } else {
+                  phoneFeedback.textContent = '사용 가능한 번호입니다.';
+                  phoneFeedback.style.display = 'block';
+                  phoneFeedback.style.color = 'green';
+                  phoneFeedback.classList.remove('text-danger');  // 있으면 제거
+                  phoneFeedback.classList.add('text-success');    // 필요시 클래스 추가
+                }
+              });
+            });
+          </script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
+    </body>
+</html>
