@@ -70,7 +70,7 @@ public class FitLinkService {
      public List<Map<String, String>> searchByName(String keyword) {
         List<AdminDto> matched = fitLinkMapper.findByNameContaining(keyword);
         return matched.stream()
-            .map(l -> Map.of("name", l.getName(), "phone", l.getPhone()))
+            .map(l -> Map.of("name", l.getName(), "phone", l.getPhone(), "email", l.getEmail()))
             .collect(Collectors.toList());
     }
     

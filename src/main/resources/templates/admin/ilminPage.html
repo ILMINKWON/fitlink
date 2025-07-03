@@ -48,12 +48,16 @@
             <ul id="suggestionList" class="list-group position-absolute w-100" style="z-index: 2000;"></ul>
           </div>
           <div class="mb-3">
-            <label for="adminEmail" class="form-label">전화번호</label>
+            <label for="adminPhone" class="form-label">전화번호</label>
             <input type="phone" class="form-control" id="adminPhone" placeholder="지도자 전화번호">
           </div>
           <div class="mb-3">
             <label for="adminCode" class="form-label">생성된 코드</label>
             <input type="text" class="form-control" id="adminCode">
+          </div>
+          <div class="mb-3">
+            <label for="adminEmail" class="form-label">이메일</label>
+            <input type="email" class="form-control" id="adminEmail" placeholder="지도자 이메일">
           </div>
           <button type="submit" class="btn btn-primary">코드전송</button>
         </form>
@@ -68,6 +72,21 @@
   <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
   
+  <script>
+    document.querySelector("form").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const email = document.getElementById("adminEmail").value;
+      const code = document.getElementById("adminCode").value;
+
+      if (!email || !code) {
+        alert("이메일 또는 코드가 비어 있습니다.");
+        return;
+      }
+
+      sendCodeByEmail(email, code);
+    });
+  </script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
     const socket = new SockJS("/ws");  
@@ -151,11 +170,12 @@
         results.forEach(item => {
           const li = document.createElement("li");
           li.className = "list-group-item list-group-item-action";
-          li.textContent = `${item.name} (${item.phone})`;
-
+          li.textContent = `${item.name} (${item.phone}) ${item.email}`;
+          
           li.addEventListener("click", () => {
             nameInput.value = item.name;
             phoneInput.value = item.phone;
+            document.getElementById("adminEmail").value = item.email; // ← 이메일도 채우기
             codeInput.value = generateRandomCode(); // ← 코드 자동 생성
             suggestionList.innerHTML = "";
           });
@@ -166,6 +186,25 @@
         console.error("자동완성 오류:", error);
       }
     });
+  </script>
+  <script>
+    async function sendCodeByEmail(email,code){
+          try{
+            const response = await fetch("/api/email/send-code", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          body: new URLSearchParams({ email, code })
+        });
+
+        const result = await response.text();
+        alert(result);
+      } catch (error) {
+        console.error("이메일 전송 실패:", error);
+      }
+    }
+
   </script>
 
 </body>

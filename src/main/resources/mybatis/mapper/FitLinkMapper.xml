@@ -57,7 +57,7 @@
 </select>
 
 <select id="findByNameContaining" resultType="com.sp.fitlink.dto.AdminDto">
-    SELECT name, phone
+    SELECT name, phone , email
     FROM admin
     WHERE name LIKE CONCAT('%', #{keyword}, '%')
   </select>
