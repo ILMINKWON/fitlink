@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <!--뷰 포트 설정-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <style>
+        .material-icons {
+            font-size: 50px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        /* 로고 스타일 */
+        .fit-logo {
+            font-size: 4rem;
+            font-weight: 800;
+            color: #6a07e2;
+            text-align: center;
+            margin-top: 30px;
+            animation: shimmer 2s infinite;
+            background: linear-gradient(90deg, #8814ac, #66b2ff, #8814ac);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* 반짝반짝 효과 */
+        @keyframes shimmer {
+            0% {
+                background-position: -300px 0;
+            }
+            100% {
+                background-position: 300px 0;
+            }
+        }
+    </style>
+
+    <!-- Kakao Map -->
+    <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=5fc3ddce96acbc8d29ced7d741b2b26c&libraries=services"></script>
+</head>
+<body>
+    <div class="container-fluid container-mv" style="margin-top: 100px;">
+        <div class="row">
+            <div class="col">
+                <div class="fit-logo mb-4" onclick="location.href='/fitLink/fitLinkUser'">Fit Link.</div>
+            </div>
+        </div>
+    </div>
+    <div class="container mb-5">
+
+        <h2 class="fw-bold text-center mb-4">내 주변 검증된 PT</h2>
+
+        <!-- 필터 : 시/도 + 성별 -->
+        <div class="row g-2 justify-content-center mb-3">
+            <div class="col-6 col-md-3">
+                <select id="select-workplace" class="form-select">
+                    <option value="">전체 지역</option>
+                    <!-- 시/도는 쉽게 하려고 하드코딩 예시, 나중에 DB에서 뿌려도 됨 -->
+                    <option value="1">서울</option>
+                    <option value="2">경기</option>
+                    <option value="3">인천</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <select id="select-gender" class="form-select">
+                    <option value="">성별 전체</option>
+                    <option value="남">남 PT</option>
+                    <option value="여">여 PT</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <select id="select-favorite" class="form-select">
+                    <option value="">전문성 선택</option>
+                    <option value="체형교정">체형교정</option>
+                    <option value="다이어트">다이어트</option>
+                    <option value="건강">건강</option>
+                    <option value="바디프로필 & 대회">바디프로필 & 대회</option>
+                    <option value="근력증가 & 체중증가">근력증가 & 체중증가</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-3">
+                <button class="btn btn-outline-primary w-100" id="btn-nearby">
+                    검색
+                </button>
+            </div>
+        </div>
+
+        <!-- 지도 + 리스트 -->
+        <div class="row">
+            <div class="col-md-7 mb-3">
+                <div id="map"></div>
+            </div>
+            <div class="col-md-5" style="max-height:500px; overflow-y:auto;">
+                <div id="list"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let map, geocoder;
+        let markers = [];
+        let infowindows = [];
+
+        const mapContainer = document.getElementById('map');
+        const mapOption = {
+            center: new kakao.maps.LatLng(37.5662952, 126.9779451),
+            level: 8
+        };
+
+        function initializeMap() {
+            mapContainer.style.height = '500px';
+            map = new kakao.maps.Map(mapContainer, mapOption);
+            geocoder = new kakao.maps.services.Geocoder();
+
+            map.relayout();
+
+            applyFilters();   // 시작할 때 1번 실행
+        }
+
+        // ---------------------------
+        //  PT 리스트 + 마커 렌더링
+        // ---------------------------
+        function renderMarkersAndList(data) {
+            markers.forEach(marker => marker.setMap(null));
+            infowindows.forEach(iw => iw.close());
+
+            markers = [];
+            infowindows = [];
+
+            const listElement = document.getElementById('list');
+            listElement.innerHTML = '';
+
+            let bounds = new kakao.maps.LatLngBounds();
+
+            data.forEach(item => {
+                const position = new kakao.maps.LatLng(item.lat, item.lng);
+
+                // 마커 생성
+                const marker = new kakao.maps.Marker({
+                    map: map,
+                    position: position,
+                    title: item.workplaceName
+                });
+                markers.push(marker);
+
+                // 인포윈도우
+                const infowindow = new kakao.maps.InfoWindow({
+                    content: `<div style="padding:5px;">${item.workplaceName}</div>`
+                });
+                infowindows.push(infowindow);
+
+                kakao.maps.event.addListener(marker, "click", () => {
+                    infowindows.forEach(iw => iw.close());
+                    infowindow.open(map, marker);
+                });
+
+                // 리스트 출력
+                listElement.innerHTML += `
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">${item.workplaceName}</h5> <span class="fw-bold fs-3">${item.name}</span>
+                        <span class="fs-5" style="cursor:pointer; color:#666;" onclick="openReviews(${item.id})">(${item.reviewCount})</span>
+                        <p class="card-text mb-1">
+                            <span class="badge ${item.gender === '남' ? 'text-bg-primary' : 'text-bg-danger'}">
+                                ${item.gender}
+                            </span>
+                            <span class="badge text-bg-secondary">${item.specialty}</span>
+                        </p>
+                        <p class="text-muted small">${item.address}</p>
+                        <a href="#" class="btn btn-sm btn-outline-info float-end"
+                           onclick="moveTo(${item.lat}, ${item.lng}); return false;">
+                           지도에서 보기
+                        </a>
+                    </div>
+                </div>
+            `;
+
+                bounds.extend(position);
+            });
+
+            if (data.length > 0) {
+                // 모든 지점을 포함하는 bounds의 가운데 좌표
+                const center = bounds.getCenter();
+
+                // 지도 중심을 가운데로
+                map.setCenter(center);
+
+                // 확대 레벨 직접 지정 (숫자 작을수록 더 확대)
+                map.setLevel(7);   // 6~8 사이로 취향껏 조절
+            } else {
+                listElement.innerHTML = `<p class="text-center text-muted mt-5">검색 조건에 맞는 선생님이 없습니다.</p>`;
+            }
+        }
+
+        function moveTo(lat, lng) {
+            map.panTo(new kakao.maps.LatLng(lat, lng));
+        }
+
+        // ---------------------------
+        //  서버로 데이터 요청
+        // ---------------------------
+        async function applyFilters() {
+            const workplace = document.getElementById('select-workplace').value;
+            const gender = document.getElementById('select-gender').value;
+            const specialty = document.getElementById('select-favorite').value;
+
+            const params = new URLSearchParams();
+            if (workplace) params.append("workplaceId", workplace);
+            if (gender) params.append("gender", gender);
+            if (specialty) params.append("specialty", specialty);
+
+            const response = await fetch(`/fitLink/api/admin/search?` + params.toString());
+            const data = await response.json();
+
+            console.log("서버에서 받은 JSON:", data);
+
+            renderMarkersAndList(data);
+        }
+
+        // ---------------------------
+        // 이벤트 등록
+        // ---------------------------
+        document.getElementById('select-workplace').addEventListener('change', applyFilters);
+        document.getElementById('select-gender').addEventListener('change', applyFilters);
+        document.getElementById('select-favorite').addEventListener('change', applyFilters);
+
+        async function openReviews(adminId){
+            const response = await fetch(`/fitLink/api/review/list?adminId=${adminId}`);
+            const reviews = await response.json();
+
+            const reviewBox = document.getElementById("review-list");
+            reviewBox.innerHTML = "";
+
+            if (reviews.length === 0) {
+                reviewBox.innerHTML = `
+            <p class="text-center text-muted">등록된 후기가 없습니다.</p>
+        `;
+            } else {
+                reviews.forEach(r => {
+                    reviewBox.innerHTML += `
+                <div class="border rounded p-2 mb-2">
+                    <div class="fw-bold">⭐ ${r.rating}점</div>
+                    <div>${r.content}</div>
+                    <div class="text-muted small mt-1">${r.created_at}</div>
+                </div>
+            `;
+                });
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById("reviewModal"));
+            modal.show();
+        }
+
+        // 페이지 로드 시 지도 생성
+        document.addEventListener("DOMContentLoaded", initializeMap);
+
+    </script>
+
+    <!-- 후기 모달 -->
+    <div class="modal fade" id="reviewModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">후기 목록</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="review-list">
+                    <!-- 후기 내용이 JS로 채워짐 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

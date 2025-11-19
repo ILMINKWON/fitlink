@@ -107,5 +107,8 @@ public class UserController {
           return ResponseEntity.ok(exists); 
       }
 
-      
+        @GetMapping("/fitLinkUser")
+        public String fitLinkUserPage() {
+            return "user/fitLinkUser";   // templates/fitLinkUser.html
+        }
 }

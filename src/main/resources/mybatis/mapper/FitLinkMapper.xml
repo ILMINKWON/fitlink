@@ -23,6 +23,7 @@
         birth,
         email,
         phone,
+        favorite,
         workplace,
         certificate_path,
         code
@@ -33,6 +34,7 @@
         #{birth},
         #{email},
         #{phone},
+        #{favorite},
         #{workplace},
         #{certificate_path},
         #{code}
@@ -61,6 +63,47 @@
     FROM admin
     WHERE name LIKE CONCAT('%', #{keyword}, '%')
   </select>
-  
+
+<!--    하나로 조인시켜 새로운 DTO만 만들기 (DB에는 말고)-->
+    <select id="trainerInfo" resultType="com.sp.fitlink.dto.AdminInfoDto">
+        SELECT
+        a.id,
+        a.name,
+        a.gender,
+        a.favorite AS specialty,
+        w.workplace_name AS workplaceName,
+        w.address,
+        w.lat,
+        w.lng,
+        COUNT(r.id) AS reviewCount /*후기 수 추가*/
+        FROM admin a
+        JOIN workplace_name w
+        ON a.workplace_name_id = w.id
+        LEFT JOIN review r
+        ON a.id = r.admin_id
+        WHERE 1=1
+        <if test="workplaceId != null">
+            AND w.workplace_id = #{workplaceId}
+        </if>
+        <if test="gender != null and gender != ''">
+            AND a.gender = #{gender}
+        </if>
+        <if test="specialty != null and specialty != ''">
+            AND a.favorite = #{specialty}
+        </if>
+        GROUP BY a.id;
+    </select>
+
+    <select id="findReviewsAdmin" resultType="com.sp.fitlink.dto.ReviewDto">
+        SELECT
+            id,
+            admin_id,
+            rating,
+            content,
+            created_at
+        FROM review
+        WHERE admin_id = #{adminId}
+        ORDER BY created_at DESC
+    </select>
 
 </mapper>

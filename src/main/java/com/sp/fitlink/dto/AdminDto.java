@@ -12,7 +12,9 @@ public class AdminDto {
     private LocalDate birth;
     private String email;
     private String phone;
+    private String favorite;
     private String workplace;
     private String certificate_path;
     private String code;
+    private int workplaceid;
 }
