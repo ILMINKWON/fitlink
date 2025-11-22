@@ -14,7 +14,7 @@ public class AdminDto {
     private String phone;
     private String favorite;
     private String workplace;
-    private String certificate_path;
+    private String certificateFileName;
     private String code;
     private int workplaceid;
 }

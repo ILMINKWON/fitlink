@@ -82,11 +82,11 @@
                     <option value="근력증가 & 체중증가">근력증가 & 체중증가</option>
                 </select>
             </div>
-            <div class="col-12 col-md-3">
-                <button class="btn btn-outline-primary w-100" id="btn-nearby">
-                    검색
-                </button>
-            </div>
+<!--            <div class="col-12 col-md-3">-->
+<!--                <button class="btn btn-outline-primary w-100" id="btn-nearby">-->
+<!--                    검색-->
+<!--                </button>-->
+<!--            </div>-->
         </div>
 
         <!-- 지도 + 리스트 -->
@@ -138,6 +138,9 @@
             let bounds = new kakao.maps.LatLngBounds();
 
             data.forEach(item => {
+
+                console.log(item.certificateFileName);
+
                 const position = new kakao.maps.LatLng(item.lat, item.lng);
 
                 // 마커 생성
@@ -172,6 +175,14 @@
                             <span class="badge text-bg-secondary">${item.specialty}</span>
                         </p>
                         <p class="text-muted small">${item.address}</p>
+                        <a href="#" class="btn btn-sm btn-outline-info float-end ms-2"
+                           onclick="openChat(${item.id}, '${item.name}'); return false;">
+                           채팅
+                        </a>
+                        <a href="#" class="btn btn-sm btn-outline-info float-end ms-2"
+                             onclick="openCertificateModal('${item.certificateFileName || ""}'); return false;">
+                             자격증서 보기
+                         </a>
                         <a href="#" class="btn btn-sm btn-outline-info float-end"
                            onclick="moveTo(${item.lat}, ${item.lng}); return false;">
                            지도에서 보기
@@ -256,10 +267,30 @@
             modal.show();
         }
 
+        function openCertificateModal(fileName){
+            const modalImg = document.getElementById("certificate-image");
+
+            modalImg.src = "/upload/certificates/" + fileName; // 정적 리소스 매핑된 경로
+
+            const modal = new bootstrap.Modal(document.getElementById("certificateModal"));
+            modal.show();
+
+        }
+
+        function openChat(adminId, adminName) {
+            location.href = `/fitLink/chat?adminId=${adminId}&name=${adminName}`;
+        }
+
+
         // 페이지 로드 시 지도 생성
         document.addEventListener("DOMContentLoaded", initializeMap);
+        // kakao.maps.load(function() {
+        //     initializeMap();
+        // });
 
     </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- 후기 모달 -->
     <div class="modal fade" id="reviewModal" tabindex="-1">
@@ -276,6 +307,21 @@
         </div>
     </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 자격증 모달 -->
+    <div class="modal fade" id="certificateModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">자격증 이미지</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body text-center">
+                    <img id="certificate-image" src=""
+                         style="max-width:50%; border-radius:10px;">
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

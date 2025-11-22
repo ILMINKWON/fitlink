@@ -36,7 +36,7 @@
         #{phone},
         #{favorite},
         #{workplace},
-        #{certificate_path},
+        #{certificateFileName},
         #{code}
     )
 </insert>
@@ -70,6 +70,7 @@
         a.id,
         a.name,
         a.gender,
+        a.certificate_path AS certificateFileName,
         a.favorite AS specialty,
         w.workplace_name AS workplaceName,
         w.address,

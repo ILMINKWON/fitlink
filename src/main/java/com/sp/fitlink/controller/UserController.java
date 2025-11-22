@@ -1,5 +1,6 @@
 package com.sp.fitlink.controller;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +8,7 @@ import org.springframework.boot.autoconfigure.jms.JmsProperties.Listener.Session
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,9 +21,10 @@ import com.sp.fitlink.service.FitLinkService;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.web.multipart.MultipartFile;
 
 @Controller
-@RequestMapping("fitLink")
+@RequestMapping("/fitLink")
 public class UserController {
 
     @Autowired
@@ -82,13 +85,28 @@ public class UserController {
       //---------------------------------------------------------------------------------
 
       @RequestMapping("/adminRegisterComplete")
-      public String adminRegisterComplete(AdminDto adminDto){
-  
-        fitLinkService.adminRegisterComplete(adminDto);
+      public String adminRegisterComplete(AdminDto adminDto,  @RequestParam("certificate_path") MultipartFile certificateFile) throws IOException {
 
-          return "/admin/adminCompletePage";
-          
-      }
+              // 저장 경로 설정
+              String uploadDir = "C:/upload/certificates/";
+              File dir = new File(uploadDir);
+              if (!dir.exists()) dir.mkdirs();
+
+              // 파일명 생성
+              String fileName = System.currentTimeMillis() + "_" + certificateFile.getOriginalFilename();
+              File destination = new File(uploadDir + fileName);
+
+              // 파일 저장
+              certificateFile.transferTo(destination);
+
+              // DTO에 저장된 파일 경로 설정
+              adminDto.setCertificateFileName(fileName);
+
+              // DB 저장
+              fitLinkService.adminRegisterComplete(adminDto);
+
+              return "/admin/adminCompletePage";
+          }
 
       //---------------------------------------------------------------------------------
 
@@ -110,5 +128,15 @@ public class UserController {
         @GetMapping("/fitLinkUser")
         public String fitLinkUserPage() {
             return "user/fitLinkUser";   // templates/fitLinkUser.html
+        }
+
+        //채팅 컨트롤러
+        @GetMapping("/chat")
+        public String chatPage(@RequestParam int adminId, @RequestParam String name, Model model) {
+
+            model.addAttribute("adminId", adminId);
+            model.addAttribute("name", name);
+
+            return "/user/chatPage";
         }
 }

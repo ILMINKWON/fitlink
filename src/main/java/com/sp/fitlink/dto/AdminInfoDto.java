@@ -10,6 +10,7 @@ public class AdminInfoDto {
     private String specialty;
     private String workplaceName;
     private String address;
+    private String certificateFileName;
     private Double lat;
     private Double lng;
     private int reviewCount;
