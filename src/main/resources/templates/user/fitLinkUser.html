@@ -166,7 +166,15 @@
                 listElement.innerHTML += `
                 <div class="card mb-3 shadow-sm">
                     <div class="card-body">
-                        <h5 class="card-title">${item.workplaceName}</h5> <span class="fw-bold fs-3">${item.name}</span>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">${item.workplaceName}</h5>
+
+                            <button class="btn btn-sm btn-danger fw-bold"
+                                    onclick="reservation(${item.id}, '${item.name}')">
+                                수업 예약 / 추후 예약금 (위약금) 받아야함.
+                            </button>
+                        </div>
+                        <div><span class="fw-bold fs-3">${item.name}</span></div>
                         <span class="fs-5" style="cursor:pointer; color:#666;" onclick="openReviews(${item.id})">(${item.reviewCount})</span>
                         <p class="card-text mb-1">
                             <span class="badge ${item.gender === '남' ? 'text-bg-primary' : 'text-bg-danger'}">
@@ -194,17 +202,14 @@
                 bounds.extend(position);
             });
 
-            if (data.length > 0) {
-                // 모든 지점을 포함하는 bounds의 가운데 좌표
+            if (data.length > 0 && markers.length > 0) {
                 const center = bounds.getCenter();
-
-                // 지도 중심을 가운데로
                 map.setCenter(center);
-
-                // 확대 레벨 직접 지정 (숫자 작을수록 더 확대)
-                map.setLevel(7);   // 6~8 사이로 취향껏 조절
+                map.setLevel(6);
             } else {
-                listElement.innerHTML = `<p class="text-center text-muted mt-5">검색 조건에 맞는 선생님이 없습니다.</p>`;
+                listElement.innerHTML = `<p class="text-center text-muted mt-5">
+                검색 조건에 맞는 선생님이 없습니다.
+            </p>`;
             }
         }
 
@@ -281,6 +286,101 @@
             location.href = `/fitLink/chat?adminId=${adminId}&name=${adminName}`;
         }
 
+        function reservation(adminId, adminName){
+            alert("* 예약은 취소하시면 위약금을 물 수 있으니 신중히 예약하여 주시기 바랍니다. \n\n * 해당 선생님이 맞는지 다시한번 체크해주시기 바랍니다.");
+
+            document.getElementById("selectTrainerId").value = adminId;
+
+            const name = document.getElementById("selectedTrainerName");
+            if(name){
+                name.textContent = `-${adminName} 선생님`;
+            }
+
+            // 폼 초기화
+            document.getElementById("reservationForm").reset();
+
+            // 시간 UI 초기화
+            const timeSelect = document.getElementById("selectTime");
+            timeSelect.selectedIndex = 0;
+            clearTimeOptions();
+
+            const today = new Date().toISOString().split("T")[0];
+            document.getElementById("selectDate").setAttribute("min", today);
+
+            const modal = new bootstrap.Modal(document.getElementById("reservationModal"));
+            modal.show();
+        }
+
+        async function saveReservation(event){
+            event.preventDefault();  // form 기본 submit 막기
+
+            const adminId = document.getElementById("selectTrainerId").value;
+            const name = document.getElementById("userName").value.trim();
+            const phone = document.getElementById("userPhone").value.trim();
+            const date = document.getElementById("selectDate").value;
+            const time = document.getElementById("selectTime").value;
+            const checkIn = `${date}T${time}:00`;
+            const checkOut = `${date}T${(parseInt(time.substring(0,2)) + 1).toString().padStart(2,'0')}:00`;
+
+            if (!date || !time || !name || !phone) {
+                alert("빈칸없이 모두 입력 완료해 주십시오.");
+                return false;
+            }
+
+            const reservationData = {
+                adminId: adminId,
+                userName: name,
+                userPhone: phone,
+                checkIn,   // yyyy-MM-dd
+                checkOut     // HH:mm
+            };
+
+            console.log("예약 데이터:", reservationData);
+
+            try{
+                const res = await fetch('/fitLink/api/reservation', {
+                    method : 'POST',
+                    headers: { 'Content-Type': 'application/json'},
+                    body: JSON.stringify(reservationData)
+                });
+
+                console.log("예약 응답 status:", res.status);
+                const text = await res.text();
+                console.log("예약 응답 body:", text);
+
+                if(res.ok){
+                    alert("예약이 완료되었습니다!");
+                    loadReservedTimes(); //  예약 즉시 반영
+                    const modelEl = document.getElementById("reservationModal");
+                    bootstrap.Modal.getInstance(modelEl).hide();
+                    document.getElementById("reservationForm").reset();
+                } else {
+                    alert("예약 실패 (" + res.status + ")");
+                }
+
+            } catch (e){
+                console.error(e);
+                alert("서버 통신 중 오류 발생 , 관리자에게 문의 바랍니다.");
+            }
+
+            return false;
+            // bootstrap.Modal.getInstance(document.getElementById("reservationModal")).hide();
+
+
+            // 💡 서버에 REST 요청을 보낼 수 있습니다.
+            /*
+            fetch('/reservation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(reservationData)
+            }).then(res => {
+                if(res.ok) alert("예약 완료!");
+                else alert("예약 실패..");
+            });
+            */
+
+        }
+
 
         // 페이지 로드 시 지도 생성
         document.addEventListener("DOMContentLoaded", initializeMap);
@@ -288,6 +388,96 @@
         //     initializeMap();
         // });
 
+    </script>
+
+    <script>
+        function clearTimeOptions() {
+            const timeSelect = document.getElementById("selectTime");
+            [...timeSelect.options].forEach(opt => {
+                opt.disabled = false;       // disabled 초기화
+                opt.style.color = "";       // 색상 초기화
+                if (!opt.value) return;
+
+                // (예약불가) 텍스트가 있으면 제거
+                opt.textContent = opt.textContent.replace(" (예약불가)", "");
+
+                // 혹시 남은 것이 있으면 완전히 원래 값으로 되돌림
+                opt.textContent = opt.value;
+            });
+        }
+
+        async function loadReservedTimes() {
+            const adminId = document.getElementById("selectTrainerId").value;
+            const date = document.getElementById("selectDate").value;
+
+            console.log("🔹 loadReservedTimes 호출됨");
+            console.log("보낸 adminId:", adminId);
+            console.log("보낸 date:", date);
+
+            if (!adminId || !date) return;
+
+            clearTimeOptions();
+            reservedTimes = [];
+
+            const timeSelect = document.getElementById("selectTime");
+            const options = [...timeSelect.options]; // ⭐ 필수 추가
+
+            const today = new Date().toISOString().split("T")[0];
+            if (date === today) {
+                const nowHour = new Date().getHours();
+
+                options.forEach(opt => {
+                    if (!opt.value) return;
+                    const hour = parseInt(opt.value.substring(0, 2));
+
+                    if (hour <= nowHour) {
+                        opt.disabled = true;
+                        opt.textContent = `${opt.value} (예약 불가)`;
+                        opt.style.color = "#aaa";
+                    }
+                });
+            }
+
+            try {
+                const res = await fetch(`/fitLink/api/reservation/times?adminId=${adminId}&date=${date}`, {
+                    headers: { "Cache-Control": "no-cache" }
+                });
+
+                const reservedTimes = await res.json();
+                console.log("서버에서 받은 예약 시간:", reservedTimes);
+
+                reservedTimes.forEach(time => {
+                    const opt = options.find(o => o.value === time.trim());
+                    if (opt) {
+                        opt.disabled = true;
+                        opt.textContent = `${time.trim()} (예약불가)`;
+                        opt.style.color = "#888";
+                    }
+                });
+
+            } catch (e) {
+                console.error("예약 시간 조회 중 오류:", e);
+            }
+        }
+
+
+
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const dateInput = document.getElementById("selectDate");
+            if (dateInput) {
+                dateInput.addEventListener("change", () => {
+
+                    console.log("📌 날짜 변경 → 시간목록 초기화만 실행");
+
+                    document.getElementById("selectTime").selectedIndex = 0;
+                    clearTimeOptions();  // UI 초기화 완료
+
+                    // adminId가 있어도 없어도 상관없이 예약 조회 실행
+                    loadReservedTimes();  // 조건 제거
+                });
+            }
+        });
     </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -320,6 +510,60 @@
                     <img id="certificate-image" src=""
                          style="max-width:50%; border-radius:10px;">
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 수업 예약 모달 -->
+    <div class="modal fade" id="reservationModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">수업 예약 <small class="text-muted ms-2" id="selectedTrainerName"></small></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <!-- form 으로 감싸기 -->
+                <form id="reservationForm" onsubmit="return saveReservation(event)">
+                    <div class="modal-body">
+                        <input type="hidden" id="selectTrainerId" name="adminId">
+
+                        <label class="form-label fw-bold">이름</label>
+                        <input type="text" id="userName" name="userName"
+                               class="form-control mb-3" placeholder="이름을 입력하세요">
+
+                        <label class="form-label fw-bold">휴대폰 번호</label>
+                        <input type="text" id="userPhone" name="userPhone"
+                               class="form-control mb-3" placeholder="010-0000-0000">
+
+                        <label class="form-label fw-bold">날짜 선택</label>
+                        <input type="date" id="selectDate" name="date"
+                               class="form-control mb-3">
+
+                         <label class="form-label fw-bold">시간 선택</label>
+                        <select id="selectTime" name="time" class="form-select">
+                            <option value="">시간 선택</option>
+                            <option>09:00</option>
+                            <option>10:00</option>
+                            <option>11:00</option>
+                            <option>12:00</option>
+                            <option>13:00</option>
+                            <option>14:00</option>
+                            <option>15:00</option>
+                            <option>16:00</option>
+                            <option>17:00</option>
+                            <option>18:00</option>
+                            <option>19:00</option>
+                            <option>20:00</option>
+                            <option>21:00</option>
+                            <option>22:00</option>
+                            <option>23:00</option>
+                        </select>
+                    </div>
+                        <button class="btn btn-primary" type="submit">예약하기</button>
+                </form>
+
             </div>
         </div>
     </div>

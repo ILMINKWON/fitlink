@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.jms.JmsProperties.Listener.Session;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,15 +34,18 @@ public class UserController {
     // 관리자용 코드 트랜잭션 처리
    @PostMapping("/verifyAdminCode")
     @Transactional
-    public void verifyAdminCode(@RequestParam("inputCode") String inputCode, HttpServletResponse response) throws IOException {
-        boolean isVerified = fitLinkService.checkAdminCode(inputCode);
+    public  ResponseEntity<String> verifyAdminCode(@RequestParam("inputCode") String inputCode, HttpSession session) throws IOException {
 
-        if (isVerified) {
-            response.getWriter().write("success");
+        AdminDto isVerified = fitLinkService.checkAdminCode(inputCode);
+
+        if (isVerified != null) {
+            session.setAttribute("loginAdmin" , isVerified.getId());
+            return ResponseEntity.ok("success");
         } else {
             // 트랜잭션 롤백 유도
             throw new RuntimeException("인증 실패: 코드 불일치");
         }
+
     }
 
     //---------------------------------------------------------------------------------
@@ -139,4 +143,36 @@ public class UserController {
 
             return "/user/chatPage";
         }
+
+    @RequestMapping("/adminPage")
+    public String adminPage(HttpSession session, Model model) {
+
+        try {
+            Object adminIdObj = session.getAttribute("loginAdmin");
+
+            // 세션에 관리자 정보가 없는 경우 → 로그인 페이지로 리다이렉트
+            if (adminIdObj == null) {
+                return "redirect:/";
+            }
+
+            int adminId = (int) adminIdObj;
+
+            AdminDto admin = fitLinkService.findAdminById(adminId);
+
+            // 관리자 정보가 DB에 없는 경우 → 오류 페이지 or 홈으로
+            if (admin == null) {
+                return "redirect:/";
+            }
+
+            model.addAttribute("admin", admin);
+
+            return "admin/adminPage";
+
+        } catch (Exception e) {
+            e.printStackTrace(); // 서버 로그에 기록
+
+            return "redirect:/";  // 문제가 생기면 홈으로 이동
+        }
+    }
+
 }

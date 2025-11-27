@@ -4,13 +4,15 @@ import com.sp.fitlink.dto.*;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map; 
 
 @Mapper
 public interface FitLinkMapper {
 
-    public String findByAdminCode();
+    public AdminDto findByAdminCode(String inputCode);
     
     public String findByKakaoCode();
 
@@ -30,4 +32,19 @@ public interface FitLinkMapper {
     public List<AdminInfoDto> trainerInfo(@Param("workplaceId") Integer workplaceId, @Param("gender") String gender, @Param("specialty") String specialty, @Param("reviewCount") Integer reviewCount);
 
     public List<ReviewDto> findReviewsAdmin(@Param("adminId") Integer adminId);
+
+    public AdminDto findAdminId(int id);
+
+    public void insertReservation( @Param("adminId") int adminId,
+                                   @Param("userName") String userName,
+                                   @Param("userPhone") String userPhone,
+                                   @Param("checkIn") String checkIn,
+                                   @Param("checkOut") String checkOut);
+
+    public List<String> findReservedTimes(@Param("adminId")int adminId, @Param("date")LocalDate date);
+
+    // 예약 카운트
+    public int countReserved(@Param("adminId")int adminId, @Param("checkIn")LocalDateTime checkIn);
+
+    public List<ReservationDto> findByAdminId(int adminId);
 }

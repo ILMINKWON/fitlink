@@ -3,8 +3,8 @@
 
 <mapper namespace="com.sp.fitlink.mapper.FitLinkMapper">
 
-<select id="findByAdminCode" resultType="String">
-    SELECT code FROM adminAuthCode LIMIT 1;
+<select id="findByAdminCode" resultType="com.sp.fitlink.dto.AdminDto">
+    SELECT * FROM admin WHERE code = #{code} LIMIT 1
 </select>
 
 <!-- <select id="countByKakaoId" resultType="int" parameterType="long">
@@ -105,6 +105,59 @@
         FROM review
         WHERE admin_id = #{adminId}
         ORDER BY created_at DESC
+    </select>
+
+    <select id="findAdminId" resultType="com.sp.fitlink.dto.AdminDto">
+        select * from admin where id = #{id};
+    </select>
+
+    <insert id="insertReservation">
+        INSERT INTO reservation
+        (
+            admin_id,
+            user_name,
+            user_phone,
+            check_in_time,
+            check_out_time,
+            date,
+            created_at
+        )
+        VALUES
+            (
+                #{adminId},
+                #{userName},
+                #{userPhone},
+                #{checkIn},
+                #{checkOut},
+                DATE_FORMAT(#{checkIn}, '%Y-%m-%d'),
+                NOW()
+            )
+    </insert>
+
+    <select id="findReservedTimes" resultType="String">
+        SELECT DATE_FORMAT(check_in_time, '%H:%i') AS reserved_time
+        FROM reservation
+        WHERE admin_id = #{adminId}
+          AND DATE(check_in_time) = DATE(#{date})
+        ORDER BY reserved_time
+    </select>
+
+    <select id="countReserved" resultType="int">
+        SELECT COUNT(*) FROM reservation WHERE admin_id = #{adminId} AND check_in_time = #{checkIn}
+    </select>
+
+    <!-- 관리자 ID 기준 예약 목록 조회 -->
+    <select id="findByAdminId" resultType="com.sp.fitlink.dto.ReservationDto">
+        SELECT
+            id,
+            admin_id AS adminId,
+            user_name AS userName,
+            user_phone AS userPhone,
+            check_in_time AS checkIn,
+            check_out_time AS checkOut
+        FROM reservation
+        WHERE admin_id = #{adminId}
+        ORDER BY check_in_time ASC
     </select>
 
 </mapper>

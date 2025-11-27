@@ -1,14 +1,14 @@
 package com.sp.fitlink.service;
 
+import com.sp.fitlink.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.sp.fitlink.controller.NotificationWebSocketController;
-import com.sp.fitlink.dto.AdminDto;
-import com.sp.fitlink.dto.ManagerDto;
-import com.sp.fitlink.dto.NotificationDto;
 import com.sp.fitlink.mapper.FitLinkMapper;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map; 
 
@@ -24,9 +24,8 @@ public class FitLinkService {
     @Autowired
     private NotificationWebSocketController socketController;
 
-    public boolean checkAdminCode(String inputCode){
-        String savedCode = fitLinkMapper.findByAdminCode(); // DB에서 저장된 인증코드 조회
-        return inputCode.equals(savedCode); // 비교
+    public AdminDto checkAdminCode(String inputCode){
+        return fitLinkMapper.findByAdminCode(inputCode);
     }
 
     //-------------------------------------------------------------------------------------
@@ -73,9 +72,41 @@ public class FitLinkService {
             .map(l -> Map.of("name", l.getName(), "phone", l.getPhone(), "email", l.getEmail()))
             .collect(Collectors.toList());
     }
-    
+
+    public AdminDto findAdminById(int id){
+        return fitLinkMapper.findAdminId(id);
+    }
+
+    public void saveReservation(ReservationRequestDto reservationRequestDto){
+        LocalDateTime checkInTime = LocalDateTime.parse(reservationRequestDto.getCheckIn());
+        LocalDateTime checkOutTime = LocalDateTime.parse(reservationRequestDto.getCheckOut());
+
+        // LocalDateTime -> String (DB DATETIME 형식에 맞춤)
+        String checkInStr = checkInTime.toString().replace("T", " "); // 2025-11-27 11:00:00
+        String checkOutStr = checkOutTime.toString().replace("T", " "); // 2025-11-27 12:00:00
+
+        // check_out_time 1시간 증가
+//        LocalDateTime checkOutTime = LocalDateTime.parse(checkOut.replace(" ", "T"))
+//                .plusHours(1);
+//        checkOut = checkOutTime.toString().replace("T", " ");
 
 
+        fitLinkMapper.insertReservation(
+                reservationRequestDto.getAdminId(), reservationRequestDto.getUserName(), reservationRequestDto.getUserPhone(),
+                checkInStr, checkOutStr);
 
-    
+    }
+
+    public List<String> findReservedTimes(int adminId, LocalDate date){
+        return fitLinkMapper.findReservedTimes(adminId, date);
+    }
+
+    public boolean isAlreadyReserved(int adminId, LocalDateTime checkIn) {
+        return fitLinkMapper.countReserved(adminId, checkIn) > 0;
+    }
+
+    public List<ReservationDto> findReservationsByAdminId(int adminId) {
+        return fitLinkMapper.findByAdminId(adminId);
+    }
+
 }
