@@ -3,10 +3,12 @@ package com.sp.fitlink.controller;
 import com.sp.fitlink.dto.*;
 import com.sp.fitlink.service.FitLinkService;
 import com.sp.fitlink.service.RestService;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -15,6 +17,7 @@ import java.time.ZoneId;
 import java.util.List;
 
 @org.springframework.web.bind.annotation.RestController
+
 @RequestMapping("/fitLink/api")
 @RequiredArgsConstructor
 public class RestController {
@@ -43,18 +46,42 @@ public class RestController {
     //GET은 조회용
     //POST는 등록/수정/삭제(상태변화)용
     @PostMapping("/reservation")
-    public ResponseEntity<String> saveReservation(@RequestBody ReservationRequestDto reservationRequestDto) {
-        LocalDateTime checkInDateTime = LocalDateTime.parse(reservationRequestDto.getCheckIn());
+    public ResponseEntity<String> saveReservation(
+            @RequestBody ReservationRequestDto reservationRequestDto,
+            HttpSession session) {
+
+        Long kakaoUserId = (Long) session.getAttribute("kakaoUserId");
+        if (kakaoUserId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("로그인이 필요합니다.");
+        }
+
+        reservationRequestDto.setKakaoUserId(kakaoUserId);
+
+        LocalDateTime checkInDateTime =
+                LocalDateTime.parse(reservationRequestDto.getCheckIn());
 
         if (fitLinkService.isAlreadyReserved(reservationRequestDto.getAdminId(), checkInDateTime)) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("이미 예약된 시간입니다.");
         }
 
-
         fitLinkService.saveReservation(reservationRequestDto);
-        return ResponseEntity.ok("success");
+
+        String formattedCheckIn = reservationRequestDto.getCheckIn().replace("T", " ");
+        String message = formattedCheckIn.substring(0, 16) + " " +
+                reservationRequestDto.getAdminName() +
+                " 트레이너와의 수업이 예약되었습니다! 💪";
+
+        fitLinkService.createReservationNotification(kakaoUserId, message);
+
+        // 🔥 여기서 ready 호출 + 세션에 tid 저장
+        KaKaoPayResponse payRes = fitLinkService.kakaoPayReady(reservationRequestDto, session);
+
+        // 프론트에는 redirect URL만 내려줌
+        return ResponseEntity.ok(payRes.getNext_redirect_pc_url());
     }
+
 
     @GetMapping("/reservation/times")
     public ResponseEntity<List<String>> getReservationTimes(@RequestParam("adminId") int adminId, @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
@@ -85,5 +112,29 @@ public class RestController {
         List<ReservationDto> reservations = fitLinkService.findReservationsByAdminId(adminId);
 
         return  ResponseEntity.ok(reservations);
+    }
+
+    @GetMapping("/notifications")
+    public List<UserNotificationDto> getUserNotifications(HttpSession session){
+        Long kakaoUserId = (Long) session.getAttribute("kakaoUserId");
+        if (kakaoUserId == null) {
+            return List.of();
+        }
+        return fitLinkService.getUserNotification(kakaoUserId);
+        }
+
+    @GetMapping("/pay/success")
+    public String kakaoPaySuccess(@RequestParam("pg_token") String pgToken,
+                                  HttpSession session) {
+
+        String tid = (String) session.getAttribute("tid");
+
+        if (tid != null) {
+            fitLinkService.kakaoPayApprove(tid, pgToken, session);
+            session.removeAttribute("tid");
+            session.removeAttribute("partner_user_id");
+        }
+
+        return "redirect:/fitLink/fitLinkUser?paySuccess=true";
     }
 }

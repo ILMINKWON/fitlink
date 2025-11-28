@@ -160,4 +160,27 @@
         ORDER BY check_in_time ASC
     </select>
 
+    <select id="existsReservation" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM reservation
+        WHERE admin_id = #{adminId}
+          AND check_in = #{checkIn}
+    </select>
+
+    <insert id="insertUserNotification" parameterType="com.sp.fitlink.dto.UserNotificationDto">
+        INSERT INTO userNotification(kakao_user_id, message, is_read)
+        VALUES(#{kakaoUserId}, #{message}, false)
+    </insert>
+
+
+    <select id="findByKakaoUserId" resultType="com.sp.fitlink.dto.UserNotificationDto">
+        SELECT id, kakao_user_id, message,
+               is_read, DATE_FORMAT(created_at, '%Y-%m-%d %H:%i') AS createdAt
+        FROM userNotification
+        WHERE kakao_user_id = #{kakaoUserId}
+        ORDER BY id DESC
+    </select>
+
+
+
 </mapper>

@@ -61,10 +61,16 @@ public class UserController {
       //---------------------------------------------------------------------------------
 
     @PostMapping("/kakao-login")
-    public ResponseEntity<String> kakaoLogin(@RequestBody KakaoLoginDto dto , Session session) {
+    public ResponseEntity<String> kakaoLogin(@RequestBody KakaoLoginDto dto , HttpSession session) {
         // dto에서 kakaoId, nickname 받아서 로그인 처리
         // 성공 시 ResponseEntity.ok("success")
         // 실패 시 ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("fail") 등
+        // kakaoUserId 세션 저장
+        session.setAttribute("kakaoUserId", dto.getKakaoId());
+
+        // 닉네임 저장 (선택)
+        session.setAttribute("nickname", dto.getNickname());
+
 
         return ResponseEntity.ok("success");
     }

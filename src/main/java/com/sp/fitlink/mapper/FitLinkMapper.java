@@ -1,6 +1,7 @@
 package com.sp.fitlink.mapper;
 
 import com.sp.fitlink.dto.*;
+import org.apache.catalina.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -47,4 +48,12 @@ public interface FitLinkMapper {
     public int countReserved(@Param("adminId")int adminId, @Param("checkIn")LocalDateTime checkIn);
 
     public List<ReservationDto> findByAdminId(int adminId);
+
+    public boolean existsReservation(@Param("adminId") int adminId,
+                              @Param("checkIn") LocalDateTime checkIn);
+
+    public void insertUserNotification(UserNotificationDto dto);
+
+    public List<UserNotificationDto> findByKakaoUserId(Long kakaoUserId);
+
 }

@@ -45,8 +45,23 @@
 <body>
     <div class="container-fluid container-mv" style="margin-top: 100px;">
         <div class="row">
-            <div class="col">
+            <div class="col d-flex justify-content-center align-items-center gap-3">
                 <div class="fit-logo mb-4" onclick="location.href='/fitLink/fitLinkUser'">Fit Link.</div>
+
+                <!-- 알림 아이콘 (로고 옆에 붙음) -->
+                <div style="position: relative; cursor: pointer;" onclick="toggleNotificationPanel()">
+                    <i class="bi bi-bell-fill fs-2 text-dark"></i>
+                    <span id="notify-badge"
+                          style="display:none; position:absolute; top:-3px; right:-3px;
+                    width:10px; height:10px; background:red; border-radius:50%;"></span>
+                </div>
+                <div id="notification-panel"
+                     class="shadow-sm border rounded p-3"
+                     style="display:none; position:absolute; top:80px; right:20px;
+            width:250px; background:white; z-index:999;">
+                    <h6 class="fw-bold">알림</h6>
+                    <ul id="notify-list" class="list-unstyled mb-0"></ul>
+                </div>
             </div>
         </div>
     </div>
@@ -171,7 +186,7 @@
 
                             <button class="btn btn-sm btn-danger fw-bold"
                                     onclick="reservation(${item.id}, '${item.name}')">
-                                수업 예약 / 추후 예약금 (위약금) 받아야함.
+                                수업 예약 및 결제
                             </button>
                         </div>
                         <div><span class="fw-bold fs-3">${item.name}</span></div>
@@ -286,7 +301,12 @@
             location.href = `/fitLink/chat?adminId=${adminId}&name=${adminName}`;
         }
 
+        let selectedAdminName = "";
+
         function reservation(adminId, adminName){
+
+            selectedAdminName = adminName;
+
             alert("* 예약은 취소하시면 위약금을 물 수 있으니 신중히 예약하여 주시기 바랍니다. \n\n * 해당 선생님이 맞는지 다시한번 체크해주시기 바랍니다.");
 
             document.getElementById("selectTrainerId").value = adminId;
@@ -329,15 +349,17 @@
 
             const reservationData = {
                 adminId: adminId,
+                adminName: selectedAdminName,
                 userName: name,
                 userPhone: phone,
                 checkIn,   // yyyy-MM-dd
-                checkOut     // HH:mm
+                checkOut,     // HH:mm
+                kakaoUserId: kakaoUserId
             };
 
             console.log("예약 데이터:", reservationData);
 
-            try{
+            try {
                 const res = await fetch('/fitLink/api/reservation', {
                     method : 'POST',
                     headers: { 'Content-Type': 'application/json'},
@@ -345,20 +367,18 @@
                 });
 
                 console.log("예약 응답 status:", res.status);
-                const text = await res.text();
-                console.log("예약 응답 body:", text);
+                const body = await res.text();              // ✅ 딱 한 번만 읽기
+                console.log("예약 응답 body:", body);
 
-                if(res.ok){
-                    alert("예약이 완료되었습니다!");
-                    loadReservedTimes(); //  예약 즉시 반영
-                    const modelEl = document.getElementById("reservationModal");
-                    bootstrap.Modal.getInstance(modelEl).hide();
-                    document.getElementById("reservationForm").reset();
+                if (res.ok) {
+                    const payUrl = body;                    // ✅ 이 값을 URL로 사용
+                    console.log("카카오페이 결제 URL:", payUrl);
+                    location.href = payUrl;                 // 🔥 결제창으로 이동
                 } else {
-                    alert("예약 실패 (" + res.status + ")");
+                    alert("예약 실패 (" + res.status + ")\n" + body);
                 }
 
-            } catch (e){
+            } catch (e) {
                 console.error(e);
                 alert("서버 통신 중 오류 발생 , 관리자에게 문의 바랍니다.");
             }
@@ -381,6 +401,27 @@
 
         }
 
+        function addNotification(message) {
+            const list = document.getElementById("notify-list");
+            const badge = document.getElementById("notify-badge");
+
+            const li = document.createElement("li");
+            li.classList.add("border-bottom", "py-2", "small");
+            li.textContent = message;
+            list.prepend(li); // 최신 알림 위로
+
+            badge.style.display = "block"; // 빨간 점 표시
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const urlParams = new URLSearchParams(window.location.search);
+
+            if (urlParams.get("paySuccess") === "true") {
+                alert("결제가 완료되어 예약이 확정되었습니다!");
+                history.replaceState(null, "", location.pathname);
+            }
+        });
+
 
         // 페이지 로드 시 지도 생성
         document.addEventListener("DOMContentLoaded", initializeMap);
@@ -388,6 +429,10 @@
         //     initializeMap();
         // });
 
+    </script>
+
+    <script>
+        const kakaoUserId = /*[[${session.kakaoUserId}]]*/ null;
     </script>
 
     <script>
@@ -478,6 +523,38 @@
                 });
             }
         });
+
+        async function loadNotifications(){
+            const res = await fetch('/fitLink/api/notifications');
+            const notifications = await res.json();
+
+            const list = document.getElementById("notify-list");
+            const badge = document.getElementById("notify-badge");
+
+            list.innerHTML = "";
+
+            if (notifications.length > 0){
+                badge.style.display = "block";
+            }
+
+            notifications.forEach(noti => {
+                const li = document.createElement("li");
+                li.classList.add("border-bottom", "py-2", "small");
+                li.textContent = noti.message;
+                list.appendChild(li);
+            })
+        }
+
+        async function toggleNotificationPanel() {
+            const panel = document.getElementById("notification-panel");
+
+            if(panel.style.display === "none") {
+                await loadNotifications(); // 알림 최신화
+                panel.style.display = "block";
+            } else {
+                panel.style.display = "none";
+            }
+        }
     </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

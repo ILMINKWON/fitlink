@@ -9,4 +9,6 @@ public class ReservationRequestDto {
     private String userPhone;
     private String checkIn;   // "2025-11-25"
     private String checkOut;   // "09:00"
+    private Long kakaoUserId;
+    private String adminName;
 }
