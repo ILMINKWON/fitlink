@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @org.springframework.web.bind.annotation.RestController
@@ -136,5 +137,33 @@ public class RestController {
         }
 
         return "redirect:/fitLink/fitLinkUser?paySuccess=true";
+    }
+
+    @DeleteMapping("/reservation/cancel/{id}")
+    public ResponseEntity<String> cancelReservation(@PathVariable int id){
+        ReservationDto reservationDto = fitLinkService.findReservationById(id);
+
+        if(reservationDto == null){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("예약 없음");
+        }
+
+        fitLinkService.reservationCancel(id);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        String formattedDateTime = reservationDto.getCheckIn().format(formatter);
+
+        // 알림 메시지
+        String message = String.format(
+                "%s 트레이너와의 %s 수업 예약이 취소되었습니다. ❌",
+                reservationDto.getAdminName(),
+                formattedDateTime
+        );
+
+        // 🔥 카카오 유저일 때만 알림 저장
+        if(reservationDto.getKakaoUserId() != null) {
+            fitLinkService.createReservationNotification(reservationDto.getKakaoUserId(), message);
+        }
+
+        return ResponseEntity.ok("취소완료");
     }
 }

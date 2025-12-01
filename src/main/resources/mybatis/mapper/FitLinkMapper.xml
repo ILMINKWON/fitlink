@@ -119,6 +119,7 @@
             user_phone,
             check_in_time,
             check_out_time,
+            kakao_user_id,
             date,
             created_at
         )
@@ -129,7 +130,8 @@
                 #{userPhone},
                 #{checkIn},
                 #{checkOut},
-                DATE_FORMAT(#{checkIn}, '%Y-%m-%d'),
+                #{kakaoUserId},
+                  DATE_FORMAT(#{checkIn}, '%Y-%m-%d'),
                 NOW()
             )
     </insert>
@@ -181,6 +183,26 @@
         ORDER BY id DESC
     </select>
 
+    <delete id="reservationRealCancel">
+        DELETE FROM reservation WHERE id = #{id}
+    </delete>
+
+    <select id="findReservationById" resultType="com.sp.fitlink.dto.ReservationDto">
+        SELECT
+            r.id,
+            r.admin_id AS adminId,
+            r.user_id AS userId,
+            r.kakao_user_id AS kakaoUserId,
+            r.user_name AS userName,
+            r.user_phone AS userPhone,
+            r.status AS status,
+            r.check_in_time AS checkIn,
+            r.check_out_time AS checkOut,
+            a.name AS adminName
+        FROM reservation r
+                 LEFT JOIN admin a ON r.admin_id = a.id
+        WHERE r.id = #{id}
+    </select>
 
 
 </mapper>

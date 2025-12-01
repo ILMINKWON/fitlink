@@ -99,7 +99,7 @@ public class FitLinkService {
 
         fitLinkMapper.insertReservation(
                 reservationRequestDto.getAdminId(), reservationRequestDto.getUserName(), reservationRequestDto.getUserPhone(),
-                checkInStr, checkOutStr);
+                checkInStr, checkOutStr,reservationRequestDto.getKakaoUserId());
 
     }
 
@@ -194,7 +194,13 @@ public class FitLinkService {
         session.removeAttribute("partner_user_id");
     }
 
+    public void reservationCancel(int id){
+        fitLinkMapper.reservationRealCancel(id);
+    }
 
 
+    public ReservationDto findReservationById(int id) {
+        return fitLinkMapper.findReservationById(id);
+    }
 
 }

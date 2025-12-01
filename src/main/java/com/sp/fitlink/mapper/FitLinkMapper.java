@@ -40,7 +40,8 @@ public interface FitLinkMapper {
                                    @Param("userName") String userName,
                                    @Param("userPhone") String userPhone,
                                    @Param("checkIn") String checkIn,
-                                   @Param("checkOut") String checkOut);
+                                   @Param("checkOut") String checkOut,
+                                   @Param("kakaoUserId") Long kakaoUserId);
 
     public List<String> findReservedTimes(@Param("adminId")int adminId, @Param("date")LocalDate date);
 
@@ -55,5 +56,9 @@ public interface FitLinkMapper {
     public void insertUserNotification(UserNotificationDto dto);
 
     public List<UserNotificationDto> findByKakaoUserId(Long kakaoUserId);
+
+    public void reservationRealCancel(@Param("id") int id);
+
+    public ReservationDto findReservationById(@Param("id") int id);
 
 }

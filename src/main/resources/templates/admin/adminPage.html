@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+    <style>
+        /* 로고 스타일 */
+        .fit-logo {
+            font-size: 4rem;
+            font-weight: 800;
+            color: #6a07e2;
+            text-align: center;
+            margin-top: 30px;
+            animation: shimmer 2s infinite;
+            background: linear-gradient(90deg, #8814ac, #66b2ff, #8814ac);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .menu-box {
+            border: 2px solid #6a07e2;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #6a07e2;
+            transition: 0.3s ease-in-out;
+        }
+        .menu-box:hover {
+            background-color: #6a07e2;
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        .menu-box.active {
+            background-color: #6a07e2;
+            color: white;
+        }
+
+        .tab-content-box {
+            display: none;
+            width: 100%;
+            max-width: 600px; /* 원하는 너비 조절 */
+            margin: 30px auto; /* 가운데 정렬 */
+            border: 1px solid #ddd;
+            padding: 25px;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container-fluid container-mv" style="margin-top: 100px;">
+    <div class="row">
+        <div class="col text-end"
+             th:utext="'<b>' + ${admin.name} + '</b>님 반갑습니다.'">
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <div class="fit-logo mb-5">Fit Link.</div>
+        </div>
+    </div>
+
+    <!-- 카테고리 메뉴 -->
+    <div class="row justify-content-center">
+        <div class="col-10 col-md-4 mb-3">
+            <div id ="customerTab" class="menu-box" onclick="showTab('customer')">
+                수강생 관리
+            </div>
+        </div>
+        <div class="col-10 col-md-4 mb-3">
+            <div id="scheduleTab" class="menu-box" onclick="showTab('schedule')">
+                수업 등록 및 일정 관리
+            </div>
+        </div>
+    </div>
+
+    <!-- 탭 내용 영역 -->
+    <div id="customerContent" class="tab-content-box justify-content-center">
+        <h4>수강생 관리</h4>
+        <ul>
+            <li>회원 관리</li>
+            <li>실시간 채팅 연결</li>
+        </ul>
+    </div>
+
+    <div id="scheduleContent" class="tab-content-box justify-content-center">
+        <ul>
+            <li>
+                <button type="button" class="btn fw-bold" data-bs-toggle="modal" data-bs-target="#scheduleModal">
+                    수업 등록 및 일정 관리
+                </button>
+            </li>
+        </ul>
+    </div>
+
+</div>
+
+<script th:inline="javascript">
+    const adminName = /*[[${admin.name}]]*/ "관리자";
+    const adminEmail = /*[[${admin.email}]]*/ "";
+    const adminId = /*[[${admin.id}]]*/ 0;
+
+    console.log("로그인한 관리자 정보 ▼");
+    console.log("관리자 이름:", adminName);
+    console.log("관리자 이메일:", adminEmail);
+    console.log("관리자 ID:", adminId);
+</script>
+
+<script>
+    function showTab(tabName){
+        // 모든 콘텐츠 숨김
+        document.getElementById("customerContent").style.display = "none";
+        document.getElementById("scheduleContent").style.display = "none";
+
+        // 모든 버튼 active 제거
+        document.getElementById("customerTab").classList.remove("active");
+        document.getElementById("scheduleTab").classList.remove("active");
+
+        // 어느 탭이 클릭되었는지에 따라 다른 콘텐츠 + 다른 탭 버튼을 활성화
+        if(tabName === "customer"){
+            document.getElementById("customerContent").style.display = "block";
+            document.getElementById("customerTab").classList.add("active");
+        } else{
+            document.getElementById("scheduleContent").style.display = "block";
+            document.getElementById("scheduleTab").classList.add("active");
+        }
+    }
+
+    showTab("customer");
+
+</script>
+<script>
+    let currentYear;
+    let currentMonth; // 0 ~ 11
+    let selectedDate = null;
+
+    const today = new Date();
+    const todayYear = today.getFullYear();
+    const todayMonth = today.getMonth();
+    const todayDate = today.getDate();
+
+    // 달력 초기화
+    function initCalendar() {
+        const now = new Date();
+        currentYear = now.getFullYear();
+        currentMonth = now.getMonth();
+        renderCalendar();
+    }
+
+    // 달력 렌더링
+    let adminReservations = [];   // 🔹 전역에 추가 (renderCalendar 위에 두면 더 좋음)
+
+    // 달력 렌더링
+    function renderCalendar() {
+        const firstDay = new Date(currentYear, currentMonth, 1);
+        const lastDay = new Date(currentYear, currentMonth + 1, 0);
+
+        const calendarBody = document.getElementById("calendarBody");
+        const title = document.getElementById("calendarTitle");
+
+        title.textContent = `${currentYear}년 ${currentMonth + 1}월`;
+        calendarBody.innerHTML = "";
+
+        let row = document.createElement("tr");
+
+        // 첫 주 앞부분 빈칸
+        for (let i = 0; i < firstDay.getDay(); i++) {
+            row.appendChild(document.createElement("td"));
+        }
+
+        for (let date = 1; date <= lastDay.getDate(); date++) {
+            const cell = document.createElement("td");
+            cell.textContent = date;
+            cell.style.cursor = "pointer";
+
+            const cellDate = new Date(currentYear, currentMonth, date);
+            const dayOfWeek = new Date(currentYear, currentMonth, date).getDay(); // 0~6
+
+            // 오늘 이전 날짜면 비활성화
+            if (cellDate < new Date(todayYear, todayMonth, todayDate)) {
+                cell.classList.add("text-muted"); // 흐리게
+                cell.style.pointerEvents = "none"; // 클릭 막기
+            } else {
+                // 🔥 활성 날짜만 클릭 이벤트 등록
+                cell.style.cursor = "pointer";
+                cell.addEventListener("click", () => selectDate(date, cell));
+            }
+
+            // 📍 요일별 색상 설정
+            if (dayOfWeek === 0) {      // 일요일
+                cell.style.color = "red";
+            } else if (dayOfWeek === 6) { // 토요일
+                cell.style.color = "blue";
+            }
+
+            const y = currentYear;
+            const m = String(currentMonth + 1).padStart(2, "0");
+            const d = String(date).padStart(2, "0");
+            const dateStr = `${y}-${m}-${d}`;
+
+            // ✅ 오늘 날짜 하이라이트
+            if (currentYear === todayYear &&
+                currentMonth === todayMonth &&
+                date === todayDate) {
+                cell.classList.add("table-primary");
+                cell.classList.add("fw-bold");
+            }
+
+            // ✅ 이 날짜에 예약이 하나라도 있으면 색 표시
+            const hasReserved = adminReservations.some(r => r.checkIn.startsWith(dateStr));
+            if (hasReserved) {
+                cell.classList.add("table-warning");
+            }
+
+            // ✅ 클릭 시 예약 목록 + 메모 로직 실행
+            cell.addEventListener("click", () => selectDate(date, cell));
+
+            row.appendChild(cell);
+
+            // 주가 끝나면 줄 바꿈
+            if ((firstDay.getDay() + date) % 7 === 0) {
+                calendarBody.appendChild(row);
+                row = document.createElement("tr");
+            }
+        }
+
+        // 남은 칸 추가
+        if (row.children.length > 0) {
+            calendarBody.appendChild(row);
+        }
+    }
+
+
+    // 날짜 선택
+    function selectDate(day, cell) {
+        selectedDate = new Date(currentYear, currentMonth, day);
+
+        const y = selectedDate.getFullYear();
+        const m = String(selectedDate.getMonth() + 1).padStart(2, '0');
+        const d = String(selectedDate.getDate()).padStart(2, '0');
+        const dateStr = `${y}-${m}-${d}`;
+
+        document.getElementById("selectedDateText").textContent =
+            `선택된 날짜: ${dateStr}`;
+
+        // 기존 선택 제거 후 선택 표시
+        document.querySelectorAll("#calendarBody td").forEach(td => {
+            td.classList.remove("table-success");
+        });
+        cell.classList.add("table-success");
+
+        // 메모 처리
+        const key = getMemoKey(selectedDate);
+        document.getElementById("memoText").value = localStorage.getItem(key) || "";
+
+        // 🔥 예약 리스트 표시
+        const listTitle = document.getElementById("reservationListTitle");
+        const listContainer = document.getElementById("reservationList");
+        listContainer.innerHTML = "";
+
+        const reservations = adminReservations.filter(r => r.checkIn.startsWith(dateStr));
+        console.log(adminReservations + "<<<<<<");
+
+
+        if (reservations.length === 0) {
+            listTitle.textContent = "예약 없음";
+            return;
+        }
+
+        listTitle.textContent = `예약 목록 (${reservations.length})`;
+        reservations.forEach(r => {
+            console.log(reservations);
+            const time = r.checkIn.substring(11, 16);
+            const userName  = r.userName  ?? r.user_name  ?? "이름 없음";
+            const userPhone = r.userPhone ?? r.user_phone ?? "번호 없음";
+
+            listContainer.innerHTML += `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    ⏱ ${time} / 👤 ${userName} / 📞 ${userPhone}
+                </div>
+                <button class="btn btn-sm btn-danger" onclick="cancelReservation(${r.id})">
+                    취소
+                </button>
+            </li>
+        `;
+        });
+    }
+
+
+    function getMemoKey(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `fitlink-memo-${adminId}-${y}-${m}-${d}`;
+    }
+
+    function saveMemo() {
+        if (!selectedDate) {
+            alert("먼저 날짜를 선택해 주세요.");
+            return;
+        }
+        try{
+            const memo = document.getElementById("memoText").value;
+            const key = getMemoKey(selectedDate);
+            localStorage.setItem(key, memo);
+            alert("메모가 저장되었습니다.");
+        } catch (e) {
+            console.error("메모 저장 실패: ", e);
+            alert("메모 저장 중 오류가 발생하였습니다.");
+        }
+
+    }
+
+    function changeMonth(offset) {
+        currentMonth += offset;
+        if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        } else if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        }
+        selectedDate = null;
+        document.getElementById("selectedDateText").textContent = "선택된 날짜: 없음";
+        document.getElementById("memoText").value = "";
+        renderCalendar();
+    }
+
+    // 모달이 처음 열릴 때 달력 초기화
+    // 🔹 이미 위에서 let adminReservations = []; 선언한 상태라고 가정
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const scheduleModal = document.getElementById("scheduleModal");
+        if (!scheduleModal) return;
+
+        scheduleModal.addEventListener("shown.bs.modal", async () => {
+            // 1) 달력 초기화 (최초 한 번)
+            if (currentYear === undefined) {
+                const now = new Date();
+                currentYear = now.getFullYear();
+                currentMonth = now.getMonth();
+            }
+
+            // 2) 이 트레이너의 전체 예약 목록 가져오기
+            try {
+                const res = await fetch(`/fitLink/api/reservation/admin?adminId=${adminId}`);
+                adminReservations = await res.json();
+                console.log("관리자 예약 목록:", adminReservations);
+            } catch (e) {
+                console.error("예약 목록 조회 실패:", e);
+                adminReservations = [];
+                alert("서버에서 예약 정보를 불러오지 못했습니다.");
+            }
+
+            // 3) 예약 정보 반영해서 달력 다시 그림
+            renderCalendar();
+        });
+    });
+
+    function cancelReservation(id) {
+        if (!confirm("정말로 이 예약을 취소하시겠습니까?")) return;
+
+        fetch(`/fitLink/api/reservation/cancel/${id}`, {
+            method: "DELETE"
+        })
+            .then(res => {
+                if (!res.ok) throw new Error("취소 실패");
+                alert("예약이 취소되었습니다.");
+                // 🔥 모달 닫기
+                const modalEl = document.getElementById("scheduleModal");
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                modal.hide();
+
+                // 🔥 모달 닫힌 뒤, 예약 목록 새로고침 준비
+                return fetch(`/fitLink/api/reservation/admin?adminId=${adminId}`,{
+                    method: "GET"
+                });
+            })
+            .then(res => res.json())
+            .then(data => {
+                adminReservations = data;
+                // 다음 번에 모달 다시 열면 최신 예약 반영됨
+            })
+            .catch(err => {
+                console.error(err);
+                alert("예약 취소 중 오류 발생");
+            });
+    }
+
+</script>
+
+
+<!-- 수업 일정 캘린더 모달 -->
+<div class="modal fade" id="scheduleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">수업 일정 캘린더</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- 달력 상단 (월 이동) -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="changeMonth(-1)">‹ 이전</button>
+                    <h5 id="calendarTitle" class="mb-0"></h5>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="changeMonth(1)">다음 ›</button>
+                </div>
+
+                <!-- 달력 테이블 -->
+                <table class="table table-bordered text-center mb-3">
+                    <thead>
+                    <tr>
+                        <th>일</th>
+                        <th>월</th>
+                        <th>화</th>
+                        <th>수</th>
+                        <th>목</th>
+                        <th>금</th>
+                        <th>토</th>
+                    </tr>
+                    </thead>
+                    <tbody id="calendarBody">
+                    <!-- JS로 채워짐 -->
+                    </tbody>
+                </table>
+
+                <!-- 선택 날짜 메모 영역 -->
+                <div>
+                    <h6 id="selectedDateText">선택된 날짜: 없음</h6>
+                    <textarea id="memoText" class="form-control" rows="3"
+                              placeholder="해당 날짜 메모를 입력하세요."></textarea>
+                    <button class="btn btn-primary mt-2" onclick="saveMemo()">메모 저장</button>
+                </div>
+                <h6 id="reservationListTitle" class="mt-3"></h6>
+                <ul id="reservationList" class="list-group"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

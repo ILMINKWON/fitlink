@@ -10,6 +10,8 @@ import java.util.Date;
 public class ReservationDto {
     private int id;
     private int adminId;
+    private Long kakaoUserId;
+    private String adminName;
     private int userId;
     private String status;
     private String userName;
