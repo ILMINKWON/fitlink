@@ -61,4 +61,21 @@ public interface FitLinkMapper {
 
     public ReservationDto findReservationById(@Param("id") int id);
 
+    public int trainerCount();
+
+    public int customerCount();
+
+    public String topRank();
+
+    public int countByToday();
+
+    public List<AdminDto> findTrainersByPage(int offset, int pageSize);
+
+    public List<UserDto> findMembers(int offset, int pageSize);
+
+    public List<AdminRankDto> findTrainerRank(int offset, int pageSize);
+
+    public List<ReservationStatDto> findReservationStatsLast7Days();
+
+    public List<AdminDto> findRecentTrainers();
 }

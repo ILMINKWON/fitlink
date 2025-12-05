@@ -16,5 +16,6 @@ public class AdminDto {
     private String workplace;
     private String certificateFileName;
     private String code;
-    private int workplaceid;
+    private int workplaceNameId;
+    private String createdAt;
 }

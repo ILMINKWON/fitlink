@@ -15,6 +15,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map; 
 
@@ -198,9 +200,60 @@ public class FitLinkService {
         fitLinkMapper.reservationRealCancel(id);
     }
 
-
     public ReservationDto findReservationById(int id) {
         return fitLinkMapper.findReservationById(id);
+    }
+
+    public int trainerByCount(){
+        return fitLinkMapper.trainerCount();
+    }
+
+    public int customerByCount(){
+        return fitLinkMapper.customerCount();
+    }
+
+    public String trainerByTop(){
+        return fitLinkMapper.topRank();
+    }
+
+    public int countToday(){
+        return fitLinkMapper.countByToday();
+    }
+
+    public List<UserDto> findCustomers(int offset, int pageSize) {
+        return fitLinkMapper.findMembers(offset,pageSize);
+    }
+
+    public List<AdminDto> findTrainers(int offset, int pageSize) {
+        return fitLinkMapper.findTrainersByPage(offset,pageSize);
+    }
+
+    public List<AdminRankDto> findRankOfTrainers(int offset, int pageSize) {
+        return fitLinkMapper.findTrainerRank(offset,pageSize);
+    }
+
+    public DashboardChartDto getReservationChartData() {
+        List<ReservationStatDto> stats = fitLinkMapper.findReservationStatsLast7Days();
+
+        List<String> labels = new ArrayList<>();
+        List<Integer> values = new ArrayList<>();
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd");
+
+        for (ReservationStatDto s : stats) {
+            labels.add(s.getStatDate().format(formatter));
+            values.add(s.getCount());
+        }
+
+        DashboardChartDto dto = new DashboardChartDto();
+        dto.setLabels(labels);
+        dto.setValues(values);
+
+        return dto;
+    }
+
+    public List<AdminDto> getRecentTrainers() {
+        return fitLinkMapper.findRecentTrainers();
     }
 
 }

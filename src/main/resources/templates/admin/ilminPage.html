@@ -6,15 +6,96 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+  <style>
+    .nav-link {
+      padding: 10px 12px;
+      border-radius: 8px;
+    }
+    .nav-link.active {
+      background: #8b4de0 !important;
+      color: #fff !important;
+      font-weight: bold;
+    }
+    .nav-link:hover {
+      background: rgba(139, 77, 224, 0.3);
+    }
+
+    /* 전체 UI 축소 */
+    body, table, .card, .nav-link {
+      font-size: 0.85rem !important;
+    }
+
+    /* 대시보드 카드 높이 줄이기 */
+    .card {
+      padding: 10px !important;
+    }
+    .card h3 {
+      font-size: 1.3rem !important;
+    }
+    .card h6 {
+      font-size: 0.9rem !important;
+    }
+
+    .row.g-4 > div {
+      margin-bottom: 10px !important;
+    }
+
+    /* 섹션마다 간격 줄이기 */
+    section {
+      margin-top: 5px !important;
+      margin-bottom: 5px !important;
+    }
+
+    /* 좌측 메뉴너비 ↓ */
+    nav.col-md-3.col-lg-2 {
+      flex: 0 0 200px !important;
+      max-width: 200px !important;
+    }
+
+    /* 그래프 영역 축소 */
+    #reservationChart {
+      height: 280px !important;
+    }
+
+    .text-center.opacity-50.py-5 {
+      padding: 10px 0 !important;
+    }
+
+    /* 제목 크기 줄이기 */
+    h2, h5 {
+      font-size: 1.1rem !important;
+    }
+
+    /* 리스트 아이템 줄높이 축소 */
+    .list-group-item {
+      padding: 6px 10px !important;
+    }
+
+    #notificationBadge {
+      font-size: 0.65rem;
+      padding: 4px 6px;
+      border-radius: 50%;
+    }
+  </style>
+
 </head>
 <body>
   <!--웹 용 관리자 페이지 !!!-->
 
   <div class="container-fluid">
-    <div class="row min-vh-100">
+    <div class="row">
       
       <nav class="col-md-3 col-lg-2 bg-dark text-white p-4">
-        <h4 class="mb-4 position-relative">관리자 메뉴  <i id="bellIcon" class="bi bi-bell ms-2"></i> <span id="notificationBadge" class="badge bg-danger d-none position-absolute top-0 start-100 translate-middle">0</span></h4>
+        <h4 class="mb-4 d-flex align-items-center justify-content-between">
+          <span class="fs-5">관리자 메뉴</span>
+          <span class="position-relative">
+            <i id="bellIcon" class="bi bi-bell fs-4" style="cursor:pointer;"></i>
+            <span id="notificationBadge"
+                  class="badge bg-danger d-none position-absolute"
+                  style="top:-8px; right:-10px;">0</span>
+          </span>
+        </h4>
         <!-- 알림창 UI 추가 -->
         <div id="notificationBox" class="bg-white border rounded shadow-sm p-3 position-absolute" 
         style="top: 60px; left: 30px; width: 300px; display: none; z-index: 1000;">
@@ -22,45 +103,119 @@
         <ul id="notificationList" class="list-unstyled mb-0 text-black"></ul>
         </div>
         <ul class="nav flex-column">
-          <li class="nav-item mb-2">
-            <a class="nav-link text-white" href="#"><i class="bi bi-house-door me-2"></i>대시보드 홈</a>
-          </li>
+          <a class="nav-link text-white" href="#" onclick="showPage('dashboardHome')">
+            <i class="bi bi-house-door me-2"></i>대시보드 홈
+          </a>
           <!-- <li class="nav-item mb-2">
             <a class="nav-link text-white" href="#"><i class="bi bi-person-plus me-2"></i>관리자 등록</a>
           </li>
           <li class="nav-item mb-2">
             <a class="nav-link text-white" href="#"><i class="bi bi-people me-2"></i>회원 관리</a>
           </li> -->
-          <li class="nav-item mb-2">
-            <a class="nav-link text-white" href="#"><i class="bi bi-box-arrow-right me-2"></i>로그아웃</a>
-          </li>
+          <a class="nav-link text-white" href="#" onclick="showPage('trainerRegister')">
+            <i class="bi bi-building-fill-add me-2"></i> 지도자 등록
+          </a>
         </ul>
       </nav>
 
       <main class="col-md-9 col-lg-10 p-5">
-        <h2 class="mb-4">지도자 등록</h2>
-        <p>※ 지도자가 등록되면 코드번호가 자동으로 생성됩니다.</p>
+        <!-- 대시보드 화면 -->
+        <section id="dashboardHome" style="display: none;">
+            <h2 class="mb-4 fw-bold" style="color:#6a07e2;">📊 관리자 대시보드</h2>
 
-        <form>
-          <div class="mb-3 position-relative">
-            <label for="adminName" class="form-label">이름</label>
-            <input type="text" class="form-control" id="adminName" autocomplete="off" placeholder="지도자 이름">
-            <ul id="suggestionList" class="list-group position-absolute w-100" style="z-index: 2000;"></ul>
-          </div>
-          <div class="mb-3">
-            <label for="adminPhone" class="form-label">전화번호</label>
-            <input type="phone" class="form-control" id="adminPhone" placeholder="지도자 전화번호">
-          </div>
-          <div class="mb-3">
-            <label for="adminCode" class="form-label">생성된 코드</label>
-            <input type="text" class="form-control" id="adminCode">
-          </div>
-          <div class="mb-3">
-            <label for="adminEmail" class="form-label">이메일</label>
-            <input type="email" class="form-control" id="adminEmail" placeholder="지도자 이메일">
-          </div>
-          <button type="submit" class="btn btn-primary">코드전송</button>
-        </form>
+            <div class="row g-4 mb-4">
+              <!-- 카드 1 -->
+              <div class="col-md-3" onclick="trainerCountCard()">
+                <div class="card shadow text-white p-3" style="background: #8b4de0; cursor: pointer;">
+                  <h6 class="fw-semibold">총 지도자 수</h6>
+                  <h3 class="display-6 fw-bold" id="cntTrainer">0</h3>
+                  <i class="bi bi-person-badge fs-2 opacity-75"></i>
+                </div>
+              </div>
+
+              <!-- 카드 2 -->
+              <div class="col-md-3" onclick="memberCountCard()">
+                <div class="card shadow text-white p-3" style="background: #a66bf7; cursor: pointer;">
+                  <h6 class="fw-semibold">총 회원 수</h6>
+                  <h3 class="display-6 fw-bold" id="cntMember">0</h3>
+                  <i class="bi bi-people fs-2 opacity-75"></i>
+                </div>
+              </div>
+
+              <!-- 카드 3 -->
+              <div class="col-md-3">
+                <div class="card shadow text-white p-3" style="background: #9a62f0;">
+                  <h6 class="fw-semibold">오늘 예약</h6>
+                  <h3 class="display-6 fw-bold" id="cntToday">0</h3>
+                  <i class="bi bi-calendar-check fs-2 opacity-75"></i>
+                </div>
+              </div>
+
+              <!-- 카드 4 -->
+              <div class="col-md-3" onclick="trainerRank();">
+                <div class="card shadow text-white p-3" style="background: #b487ff; cursor: pointer;">
+                  <h6 class="fw-semibold">월간 예약 1등</h6>
+                  <h3 class="display-6 fw-bold" id="topRankName">-</h3>
+                  <i class="bi bi-trophy fs-2 opacity-75"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="card shadow-sm p-4 mt-4" style="border-left: 6px solid #8b4de0;">
+              <h5 class="fw-bold" style="color:#6a07e2;">예약 현황 그래프</h5>
+              <div class="text-center opacity-50 py-5">
+                <i class="bi bi-bar-chart-line fs-1"></i>
+                <canvas id="reservationChart" height="120"></canvas>
+              </div>
+            </div>
+
+<!--           <지도자>-->
+            <div class="card shadow-sm p-4 mt-4" style="border-left: 6px solid #8b4de0;">
+              <h5 class="fw-bold" style="color:#6a07e2;">최근 가입 지도자</h5>
+              <ul class="list-group mt-3" id="recentList">
+              </ul>
+            </div>
+          </section>
+
+
+        <!-- 지도자 등록 화면 -->
+        <section id="trainerRegister">
+          <h2 class="mb-4">지도자 등록</h2>
+          <p>※ 지도자가 등록되면 코드번호가 자동으로 생성됩니다.</p>
+            <form>
+              <div class="mb-3 position-relative">
+                <label for="adminName" class="form-label">이름</label>
+                <input type="text" class="form-control" id="adminName" autocomplete="off" placeholder="지도자 이름">
+                <ul id="suggestionList" class="list-group position-absolute w-100" style="z-index: 2000;"></ul>
+              </div>
+              <div class="mb-3">
+                <label for="adminPhone" class="form-label">전화번호</label>
+                <input type="phone" class="form-control" id="adminPhone" placeholder="지도자 전화번호">
+              </div>
+              <div class="mb-3">
+                <label for="adminCode" class="form-label">생성된 코드</label>
+                <input type="text" class="form-control" id="adminCode">
+              </div>
+              <div class="mb-3">
+                <label for="adminEmail" class="form-label">이메일</label>
+                <input type="email" class="form-control" id="adminEmail" placeholder="지도자 이메일">
+              </div>
+              <button type="submit" class="btn btn-primary">코드전송</button>
+            </form>
+        </section>
+        <!--      회원 목록 카드-->
+        <section id="customerListSection" style="display:none;">
+          <h2 class="mb-4 fw-bold" style="color:#6a07e2;">회원 목록</h2>
+          <div id="customerListContent"></div>
+          <nav id="memberPaginationContainer"></nav>
+        </section>
+
+        <!-- 선생님 순위-->
+        <section id="trainerRankSection" style="display:none;">
+          <h2 class="mb-4 fw-bold" style="color:#6a07e2;">트레이너 월간 예약 순위</h2>
+          <div id="trainerRankContent"></div>
+          <nav id="trainerRankPaginationContainer"></nav>
+        </section>
       </main>
 
       <div id="adminContainer" data-admin-id="1"></div>
@@ -71,6 +226,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   
   <script>
     document.querySelector("form").addEventListener("submit", function (e) {
@@ -89,7 +245,7 @@
   </script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-    const socket = new SockJS("/ws");  
+    const socket = new SockJS("/ws-chat");
     const stompClient = Stomp.over(socket);
 
     const bellIcon = document.getElementById("bellIcon");
@@ -205,6 +361,252 @@
       }
     }
 
+    async function showPage(pageId){
+      // 모든 화면 숨김
+      document.querySelectorAll("main section").forEach(sec => sec.style.display = "none");
+      document.getElementById(pageId).style.display = "block";
+
+      // 좌측 메뉴 active 표시 변경
+      document.querySelectorAll(".nav-link").forEach(link => link.classList.remove("active"));
+
+      if(event && event.target){
+        event.target.classList.add("active");
+      }
+
+
+      if(pageId === "dashboardHome"){
+        await loadDashboardData();
+        await loadReservationChart();
+        await loadRecentTrainers();
+      }
+    }
+
+    async function loadDashboardData(){
+      try{
+        const res = await fetch('/fitLink/api/dashboard/data');
+        const data = await res.json();
+
+        document.getElementById("cntTrainer").innerText = data.trainerCount + "명";
+        document.getElementById("cntMember").innerText =  data.memberCount + "명";
+        document.getElementById("topRankName").innerText = data.topRank;
+        document.getElementById("cntToday").innerText = data.reservationToday + "건";
+      } catch (e){
+        console.log("대시보드 로딩 실패:", e);
+      }
+    }
+
+    function trainerCountCard(){
+        window.location.href = "/fitLink/trainers?page=1";
+    }
+
+    async function loadCustomerList(page = 1){
+      try{
+        const res = await fetch(`/fitLink/api/customer?page=${page}`);
+        const data = await res.json();
+
+        renderCustomerTable(data);
+        showPage('customerListSection');
+
+      }catch (e) {
+        console.error("회원 목록 로딩 실패", e);
+      }
+    }
+
+    function renderCustomerTable(data){
+      const target = document.getElementById("customerListContent");
+
+
+      let html = `
+      <table class="table table-hover text-center align-middle shadow-sm">
+          <thead class="table-light">
+          <tr>
+              <th>#</th>
+              <th>이름</th>
+              <th>전화번호</th>
+              <th>가입일</th>
+          </tr></thead><tbody>
+      `;
+
+        data.list.forEach((m, i) => {
+          const num = (data.currentPage - 1) * 5 + (i + 1);
+          html += `
+          <tr>
+              <td>${num}</td>
+              <td>${m.name}</td>
+              <td>${m.phone}</td>
+              <td>${m.createdAt || '-'}</td>
+          </tr>`;
+        });
+
+        html += `</tbody></table>`;
+        target.innerHTML = html;
+      console.log(data.list[0]);
+
+        renderMemberPagination(data.currentPage, data.totalPages);
+    }
+
+    function renderMemberPagination(currentPage, totalPages){
+      const pageBox = document.getElementById("memberPaginationContainer");
+      let html = `<ul class="pagination justify-content-center">`;
+
+      if(currentPage > 1){
+        html += `<li class="page-item"><a class="page-link" href="#" onclick="loadCustomerList(${currentPage-1})">&laquo;</a></li>`;
+      }
+
+      for(let p=1; p<=totalPages; p++){
+        html += `<li class="page-item ${p==currentPage?'active':''}">
+                    <a class="page-link" href="#" onclick="loadCustomerList(${p})">${p}</a>
+                </li>`;
+      }
+
+      if(currentPage < totalPages){
+        html += `<li class="page-item"><a class="page-link" href="#" onclick="loadCustomerList(${currentPage+1})">&raquo;</a></li>`;
+      }
+
+      html += `</ul>`;
+      pageBox.innerHTML = html;
+    }
+
+    function memberCountCard(){
+      loadCustomerList(1);
+    }
+
+    //1페이지부터 시작.
+    function trainerRank(){
+      loadRankList(1);
+    }
+    async function loadRankList(page = 1){
+      try{
+        const res = await fetch(`/fitLink/api/rank?page=${page}`);
+        const data = await res.json();
+
+        renderRankTable(data);
+        showPage('trainerRankSection');
+      } catch (e) {
+        console.error("로딩 실패",e);
+      }
+    }
+
+    function renderRankTable(data){
+      const target = document.getElementById("trainerRankContent");
+
+      let html = `
+        <table class="table table-hover text-center align-middle shadow-sm">
+          <thead class="table-light">
+            <tr>
+              <th>순위</th>
+              <th>이름</th>
+              <th>지점</th>
+              <th>이번달 예약 수</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      data.list.forEach((t,i) => {
+        const rank = (data.currentPage - 1) * 5 + (i + 1);
+        html += `
+          <tr>
+            <td>${rank}</td>
+            <td>${t.name}</td>
+            <td>${t.workplaceName || '-'}</td>
+            <td>${t.reservationCount || 0}</td>
+          </tr>
+        `;
+      });
+
+      html += `</tbody></table>`;
+      target.innerHTML = html;
+
+      renderTrainerRankPagination(data.currentPage, data.totalPages);
+    }
+
+    function renderTrainerRankPagination(currentPage, totalPages) {
+      const pageBox = document.getElementById("trainerRankPaginationContainer");
+      let html = `<ul class="pagination justify-content-center">`;
+
+      if (currentPage > 1) {
+        html += `
+      <li class="page-item">
+        <a class="page-link" href="#" onclick="loadRankList(${currentPage - 1})">&laquo;</a>
+      </li>`;
+      }
+
+      for (let p = 1; p <= totalPages; p++) {
+        html += `
+      <li class="page-item ${p === currentPage ? 'active' : ''}">
+        <a class="page-link" href="#" onclick="loadRankList(${p})">${p}</a>
+      </li>`;
+      }
+
+      if (currentPage < totalPages) {
+        html += `
+      <li class="page-item">
+        <a class="page-link" href="#" onclick="loadRankList(${currentPage + 1})">&raquo;</a>
+      </li>`;
+      }
+
+      html += `</ul>`;
+      pageBox.innerHTML = html;
+    }
+
+
+    //예약 차트 그래프
+    let chart; // 전역 유지
+
+    // 📌 예약 그래프 로드 함수
+    async function loadReservationChart() {
+      try {
+        const res = await fetch("/fitLink/api/dashboard/chart");
+        const data = await res.json();
+
+        const ctx = document.getElementById('reservationChart').getContext('2d');
+
+        if (chart) chart.destroy(); // 기존 그래프 제거
+
+        chart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: data.labels, // ["03-01", "03-02", ...]
+            datasets: [{
+              label: "일별 예약 수",
+              data: data.values, // [4, 7, 2, 9, 3...]
+              backgroundColor: "#7532d2"
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: { beginAtZero: true }
+            }
+          }
+        });
+
+      } catch (e) {
+        console.error("그래프 로딩 실패", e);
+      }
+    }
+
+    async function loadRecentTrainers(){
+      try {
+        const res = await fetch("/fitLink/api/recent-trainers");
+        const data = await res.json();
+
+        const list = document.getElementById("recentList");
+        list.innerHTML = "";
+
+        data.forEach(t => {
+          const li = `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                ${t.name}
+                <span class="badge bg-light text-dark">${(t.createdAt || '').substring(0,10)}</span>
+            </li>`;
+          list.insertAdjacentHTML("beforeend", li);
+        });
+      } catch(e) {
+        console.error("최근 지도자 목록 실패:", e);
+      }
+    }
   </script>
 
 </body>

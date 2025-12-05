@@ -2,7 +2,9 @@ package com.sp.fitlink.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
+import com.sp.fitlink.dto.AdminInfoDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.jms.JmsProperties.Listener.Session;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
@@ -179,6 +181,23 @@ public class UserController {
 
             return "redirect:/";  // 문제가 생기면 홈으로 이동
         }
+    }
+
+    @GetMapping("/trainers")
+    public String trainerList(@RequestParam(defaultValue = "1")int page,Model model){
+        int pageSize = 5;
+        int total = fitLinkService.trainerByCount();
+        int offset = (page - 1) * pageSize;
+
+        List<AdminDto> list = fitLinkService.findTrainers(offset,pageSize);
+
+        int totalPages = (int) Math.ceil((double) total / pageSize);
+
+        model.addAttribute("trainers", list);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
+
+        return "admin/trainers";
     }
 
 }

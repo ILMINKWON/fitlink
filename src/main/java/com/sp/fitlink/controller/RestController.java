@@ -15,7 +15,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @org.springframework.web.bind.annotation.RestController
 
@@ -166,4 +168,69 @@ public class RestController {
 
         return ResponseEntity.ok("취소완료");
     }
+
+    @GetMapping("/dashboard/data")
+    public ResponseEntity<DashboardResponseDto> dashboard(){
+        DashboardResponseDto dto = new DashboardResponseDto();
+
+        dto.setTrainerCount(fitLinkService.trainerByCount());
+        dto.setMemberCount(fitLinkService.customerByCount());
+        dto.setTopRank(fitLinkService.trainerByTop());
+        dto.setReservationToday(fitLinkService.countToday());
+//        dto.setNewNotifications(fitLinkService.countUnread());
+//
+//        DashboardResponseDto.WeeklyReservationDto chartDto =
+//                new DashboardResponseDto.WeeklyReservationDto();
+//        chartDto.setLabels(List.of("월","화","수","목","금","토","일"));
+//        chartDto.setData(reservationService.getWeeklyStats());
+//        dto.setWeeklyReservation(chartDto);
+//
+//        dto.setRecentTrainers(trainerService.getRecent(5));
+
+        return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/customer")
+    @ResponseBody
+    public Map<String,Object> customerListAPI(@RequestParam(defaultValue = "1") int page){
+        int pageSize = 10;
+        int total = fitLinkService.customerByCount();
+        int offset = (page-1) * pageSize;
+
+        List<UserDto> list = fitLinkService.findCustomers(offset, pageSize);
+        int totalPages = (int) Math.ceil((double) total / pageSize);
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("totalPages", totalPages);
+        map.put("currentPage", page);
+        map.put("list", list);
+
+        return map;
+    }
+
+    @GetMapping("/rank")
+    @ResponseBody
+    public Map<String,Object> rank(@RequestParam(defaultValue = "1") int page){
+        int pageSize = 5;
+        int offset = (page-1) * pageSize;
+
+        List<AdminRankDto> list = fitLinkService.findRankOfTrainers(offset,pageSize);
+        Map<String,Object> map = new HashMap<>();
+        map.put("totalPages", list.size());
+        map.put("currentPage", page);
+        map.put("list", list);
+
+        return map;
+    }
+
+    @GetMapping("/dashboard/chart")
+    public DashboardChartDto getChart() {
+        return fitLinkService.getReservationChartData();
+    }
+
+    @GetMapping("/recent-trainers")
+    public List<AdminDto> recentTrainers() {
+        return fitLinkService.getRecentTrainers();
+    }
+
 }

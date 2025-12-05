@@ -204,5 +204,89 @@
         WHERE r.id = #{id}
     </select>
 
+    <select id="trainerCount" resultType="int">
+        SELECT COUNT(*) FROM admin;
+    </select>
+
+    <select id="customerCount" resultType="int">
+        select COUNT(*) FROM user;
+    </select>
+
+    <select id="topRank" resultType="String">
+        SELECT a.name AS trainer_name FROM admin a JOIN reservation r ON a.id = r.admin_id
+        WHERE DATE_FORMAT(r.date, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m') GROUP BY a.id, a.name DESC LIMIT 1;
+    </select>
+
+    <select id="countByToday" resultType="int">
+        SELECT COUNT(*) AS today_reservation_count
+        FROM reservation
+        WHERE DATE(check_in_time) = CURDATE();
+    </select>
+
+    <select id="findTrainersByPage" resultType="com.sp.fitlink.dto.AdminDto">
+        SELECT   id,
+                 name,
+                 gender,
+                 birth,
+                 email,
+                 phone,
+                 workplace,
+                 certificate_path AS certificateFileName,
+                 code,
+                 workplace_name_id AS workplaceNameId,
+                 favorite
+        FROM admin
+        ORDER BY id ASC
+            LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="findMembers" resultType="com.sp.fitlink.dto.UserDto">
+        SELECT
+            id,
+            admin_id AS adminId,
+            name,
+            phone,
+            created_at AS createdAt
+        FROM user
+        ORDER BY id DESC
+            LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="findTrainerRank" resultType="com.sp.fitlink.dto.AdminRankDto">
+        SELECT
+            a.id,
+            a.name,
+            w.workplace_name AS workplaceName,
+            COUNT(r.id) AS reservationCount
+        FROM admin a
+                 LEFT JOIN reservation r
+                           ON a.id = r.admin_id
+                               AND DATE_FORMAT(r.check_in_time, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')  /* 이번 달만 */
+                 LEFT JOIN workplace_name w
+                           ON a.workplace_name_id = w.id
+        GROUP BY a.id
+        ORDER BY reservationCount DESC, a.id ASC   /* 예약 많이 한 순 → 동률이면 id 오름차순 */
+            LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- FitLinkMapper.xml 안에 추가 -->
+    <select id="findReservationStatsLast7Days"
+            resultType="com.sp.fitlink.dto.ReservationStatDto">
+        SELECT
+            DATE(check_in_time) AS statDate,
+            COUNT(*)       AS count
+        FROM reservation
+        WHERE check_in_time >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+        GROUP BY DATE(check_in_time)
+        ORDER BY statDate
+    </select>
+
+    <select id="findRecentTrainers" resultType="com.sp.fitlink.dto.AdminDto">
+        SELECT id, name, created_at as createdAt
+        FROM admin
+        ORDER BY createdAt DESC
+            LIMIT 3
+    </select>
+
 
 </mapper>

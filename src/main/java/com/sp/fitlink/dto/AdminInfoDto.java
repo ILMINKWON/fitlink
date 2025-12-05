@@ -9,6 +9,7 @@ public class AdminInfoDto {
     private String gender;
     private String specialty;
     private String workplaceName;
+    private String workplace;
     private String address;
     private String certificateFileName;
     private Double lat;

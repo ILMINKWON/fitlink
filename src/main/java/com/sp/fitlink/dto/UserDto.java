@@ -8,4 +8,5 @@ public class UserDto {
     private int adminId;
     private String name;
     private String phone;
+    private String createdAt;
 }
