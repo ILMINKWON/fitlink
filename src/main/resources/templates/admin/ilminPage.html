@@ -8,6 +8,16 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 
   <style>
+    nav {
+      height: 100vh;
+      position: relative;
+      overflow-y: auto;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
     .nav-link {
       padding: 10px 12px;
       border-radius: 8px;
@@ -48,10 +58,10 @@
     }
 
     /* 좌측 메뉴너비 ↓ */
-    nav.col-md-3.col-lg-2 {
-      flex: 0 0 200px !important;
-      max-width: 200px !important;
-    }
+    /*nav.col-md-3.col-lg-2 {*/
+    /*  flex: 0 0 200px !important;*/
+    /*  max-width: 200px !important;*/
+    /*}*/
 
     /* 그래프 영역 축소 */
     #reservationChart {
@@ -84,9 +94,9 @@
   <!--웹 용 관리자 페이지 !!!-->
 
   <div class="container-fluid">
-    <div class="row">
+    <div class="row min-vh-100">
       
-      <nav class="col-md-3 col-lg-2 bg-dark text-white p-4">
+      <nav class="col-md-2 bg-dark text-white p-4">
         <h4 class="mb-4 d-flex align-items-center justify-content-between">
           <span class="fs-5">관리자 메뉴</span>
           <span class="position-relative">
@@ -115,10 +125,13 @@
           <a class="nav-link text-white" href="#" onclick="showPage('trainerRegister')">
             <i class="bi bi-building-fill-add me-2"></i> 지도자 등록
           </a>
+          <a class="nav-link text-white" href="#" onclick="trainerCountCard()">
+            <i class="bi bi-building me-2"></i> 가입 목록 현황
+          </a>
         </ul>
       </nav>
 
-      <main class="col-md-9 col-lg-10 p-5">
+      <main class="col-md-10 p-5">
         <!-- 대시보드 화면 -->
         <section id="dashboardHome" style="display: none;">
             <h2 class="mb-4 fw-bold" style="color:#6a07e2;">📊 관리자 대시보드</h2>
@@ -203,7 +216,7 @@
               <button type="submit" class="btn btn-primary">코드전송</button>
             </form>
         </section>
-        <!--      회원 목록 카드-->
+        <!-- 회원 목록 카드-->
         <section id="customerListSection" style="display:none;">
           <h2 class="mb-4 fw-bold" style="color:#6a07e2;">회원 목록</h2>
           <div id="customerListContent"></div>
@@ -216,6 +229,11 @@
           <div id="trainerRankContent"></div>
           <nav id="trainerRankPaginationContainer"></nav>
         </section>
+
+        <!--가입 목록 현황-->
+<!--        <section id = "trainerRegisterList" style="display:none;">-->
+<!--          <h2 class="mb-4">가입 목록 현황</h2>-->
+<!--        </section>-->
       </main>
 
       <div id="adminContainer" data-admin-id="1"></div>

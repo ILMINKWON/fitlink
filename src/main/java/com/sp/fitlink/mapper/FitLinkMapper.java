@@ -78,4 +78,6 @@ public interface FitLinkMapper {
     public List<ReservationStatDto> findReservationStatsLast7Days();
 
     public List<AdminDto> findRecentTrainers();
+
+    public void adminCodeRegisterComplete(int adminId, String adminCode);
 }

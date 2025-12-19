@@ -19,7 +19,7 @@ public class LeaderSearchController {
     private FitLinkService fitLinkService;
 
     @GetMapping("/search")
-    public List<Map<String, String>> searchLeaders(@RequestParam("keyword") String keyword) {
+    public List<Map<String, Object>> searchLeaders(@RequestParam("keyword") String keyword) {
         return fitLinkService.searchByName(keyword);
     }
 }

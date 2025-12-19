@@ -20,6 +20,7 @@
             <th>성별</th>
             <th>분야</th>
             <th>전화번호</th>
+            <th>자격증 사진</th>
             <th>지점</th>
         </tr>
         </thead>
@@ -34,8 +35,18 @@
                       th:text="${t.gender}">
                 </span>
             </td>
-            <td th:text="${t.phone}"></td>
             <td th:text="${t.favorite}"></td>
+            <td th:text="${t.phone}"></td>
+            <td>
+                <img th:if="${t.certificateFileName != null}"
+                     th:src="@{'/upload/certificates/' + ${t.certificateFileName}}"
+                     alt="자격증"
+                     style="width:60px; cursor:pointer;"
+                     class="img-thumbnail"
+                     data-bs-toggle="modal"
+                     data-bs-target="#certificateModal"
+                     th:data-img="@{'/upload/certificates/' + ${t.certificateFileName}}">
+            </td>
             <td th:text="${t.workplace}"></td>
         </tr>
         </tbody>
@@ -68,8 +79,35 @@
 
         </ul>
     </nav>
-
 </div>
+
+<div class="modal fade" id="certificateModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">자격증 이미지</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" class="img-fluid" alt="자격증 이미지">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    const modal = document.getElementById('certificateModal');
+
+    modal.addEventListener('show.bs.modal', function (event) {
+        const trigger = event.relatedTarget;
+        const imgSrc = trigger.getAttribute('data-img');
+        document.getElementById('modalImage').src = imgSrc;
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 
 </body>
 </html>

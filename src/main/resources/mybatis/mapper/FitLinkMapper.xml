@@ -59,7 +59,7 @@
 </select>
 
 <select id="findByNameContaining" resultType="com.sp.fitlink.dto.AdminDto">
-    SELECT name, phone , email
+    SELECT id,name, phone , email
     FROM admin
     WHERE name LIKE CONCAT('%', #{keyword}, '%')
   </select>
@@ -287,6 +287,12 @@
         ORDER BY createdAt DESC
             LIMIT 3
     </select>
+
+    <update id="adminCodeRegisterComplete">
+        UPDATE admin
+        SET code = #{adminCode}
+        WHERE id = #{adminId}
+    </update>
 
 
 </mapper>

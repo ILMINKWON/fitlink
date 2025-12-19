@@ -25,6 +25,7 @@ import com.sp.fitlink.service.FitLinkService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/fitLink")
@@ -94,6 +95,13 @@ public class UserController {
         
     }
 
+    @RequestMapping("/adminCodeInsert")
+    public String adminCodeInsert(){
+
+        return "/admin/adminCodeInsert";
+
+    }
+
       //---------------------------------------------------------------------------------
 
       @RequestMapping("/adminRegisterComplete")
@@ -119,6 +127,19 @@ public class UserController {
 
               return "/admin/adminCompletePage";
           }
+
+          @RequestMapping("/adminCodeRegisterComplete")
+          public String adminCodeRegisterComplete(@RequestParam int adminId, @RequestParam String adminCode, RedirectAttributes ra) {
+              // DB 저장
+              fitLinkService.adminCodeRegisterComplete(adminId, adminCode);
+
+              ra.addFlashAttribute("msg", "등록이 완료되었습니다.");
+
+              return "redirect:/fitLink/mainPage";
+          }
+
+
+
 
       //---------------------------------------------------------------------------------
 

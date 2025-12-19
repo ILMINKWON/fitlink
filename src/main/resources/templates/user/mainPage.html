@@ -86,6 +86,13 @@
                                 </span>
                             </div>
                         </div>
+                            <div class="row">
+                                <div class="col ms-1 mt-3">
+                                <span class="fw-bold mt-4" style="color: gray; font-size: 0.5rem;">* 코드를 부여받은 지도자분께서는 <a href="/fitLink/adminCodeInsert" class="fs-6" style="text-decoration: underline; color: gray;">
+                                    코드등록</a>를 클릭해주세요.
+                                </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     </div>
@@ -259,4 +266,9 @@
         }
 
     </script>
+
+    <script th:if="${msg}" th:inline="javascript">
+        alert([[${msg}]]);
+    </script>
+
 </html>

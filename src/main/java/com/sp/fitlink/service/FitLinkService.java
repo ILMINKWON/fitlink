@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map; 
 
@@ -64,6 +65,10 @@ public class FitLinkService {
 
      }
 
+     public void adminCodeRegisterComplete(int adminId, String adminCode){
+        fitLinkMapper.adminCodeRegisterComplete(adminId, adminCode);
+     }
+
        //전화번호 중복체크
 
      public boolean existsByPhone(String phone) {
@@ -74,11 +79,18 @@ public class FitLinkService {
 
      //-------------------------------------------------------------------------------------
 
-     public List<Map<String, String>> searchByName(String keyword) {
+     public List<Map<String, Object>> searchByName(String keyword) {
         List<AdminDto> matched = fitLinkMapper.findByNameContaining(keyword);
-        return matched.stream()
-            .map(l -> Map.of("name", l.getName(), "phone", l.getPhone(), "email", l.getEmail()))
-            .collect(Collectors.toList());
+         return matched.stream()
+                 .map(l -> {
+                     Map<String, Object> map = new HashMap<>();
+                     map.put("id", l.getId());
+                     map.put("name", l.getName());
+                     map.put("phone", l.getPhone());
+                     map.put("email", l.getEmail());
+                     return map;
+                 })
+                 .collect(Collectors.toList());
     }
 
     public AdminDto findAdminById(int id){
